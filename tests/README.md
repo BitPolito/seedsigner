@@ -1,83 +1,38 @@
-# Running Tests
+# Tests
 
-The tests are designed to be run on non-Raspi hardware.
+The test suite covers the upstream SeedSigner application, BitPolito visual
+tokens and assets, simulator adapters, and screenshot generation.
 
-## Setup
-On your testing machine you'll have to install:
-```bash
-# general dependencies
-pip3 install -r requirements.txt
+From the repository root:
 
-# test suite dependencies
-pip3 install -r tests/requirements.txt
-```
+~~~bash
+./scripts/setup-dev.sh
+scripts/run-quality-gate.sh --quick
+~~~
 
-Then make the `seedsigner` python module visible/importable to the tests by installing it:
-```
-pip3 install -e .
-```
+Use the release gate before publishing:
 
-## Running all tests, calculating overall test coverage
-tldr: just run the convenience script from the project root:
+~~~bash
+scripts/run-quality-gate.sh --release
+~~~
 
-```bash
+Run a focused test with:
+
+~~~bash
+LD_LIBRARY_PATH=.simulator-runtime/lib .venv-simulator/bin/python -m pytest tests/test_settings.py -q
+~~~
+
+Generate screenshots only into the ignored artifacts directory:
+
+~~~bash
+.venv-simulator/bin/python -m pytest tests/screenshot_generator/generator.py \
+  --locale en --screenshot-output artifacts/screenshots/en
+~~~
+
+Generate the coverage report with:
+
+~~~bash
 ./tests/run_full_coverage.sh
-```
+~~~
 
-## Running tests manually
-Run the whole test suite:
-```
-pytest
-```
-
-Run a specific test file:
-```
-pytest tests/test_this_file.py
-```
-
-Run a specific test:
-```
-pytest tests/test_this_file.py::test_this_specific_test
-```
-
-Force pytest to show logging output:
-```bash
-pytest tests/test_this_file.py::test_this_specific_test -o log_cli=1
-
-# or (same result)
-
-pytest tests/test_this_file.py::test_this_specific_test --log-cli-level=DEBUG
-```
-
-Annoying complications:
-* If you want to see `print()` statements that are in a test file, add `-s`
-* Better idea: use a proper logger in the test file and use one of the above options to display logs
-
-
-## Screenshot generator
-The screenshot generator is meant to mostly be a utility and not really part of the test suite. However,
-it is actually implemented to be run by `pytest`.
-
-see: [Screenshot generator README](screenshot_generator/README.md)
-
-
-## Generate coverage manually
-Run tests and generate test coverage
-```bash
-coverage run -m pytest
-```
-
-The screenshots can generate their own separate coverage report:
-```bash
-coverage run -m pytest tests/screenshot_generator/generator.py --locale es
-```
-
-Show the resulting test coverage details:
-```bash
-coverage report
-```
-
-Generate the interactive html report:
-```bash
-coverage html
-```
+The HTML report is written to artifacts/coverage/html/.
