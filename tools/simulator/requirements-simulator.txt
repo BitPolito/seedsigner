@@ -1,0 +1,2 @@
+# Development-only dependencies; never installed in SeedSigner OS.
+numpy==1.26.4

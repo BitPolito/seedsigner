@@ -41,8 +41,8 @@ from seedsigner.models.settings import Settings
 from seedsigner.models.settings_definition import SettingsConstants, SettingsDefinition
 from seedsigner.views import (MainMenuView, PowerOptionsView, RestartView, RemoveMicroSDWarningView, NotYetImplementedView, UnhandledExceptionView, 
     psbt_views, seed_views, settings_views, tools_views, scan_views)
-from seedsigner.views.screensaver import OpeningSplashView
-from seedsigner.views.view import CameraConnectionErrorView, NetworkMismatchErrorView, OptionDisabledView, PowerOffView
+from seedsigner.views.screensaver import OpeningSplashView, ScreensaverScreen
+from seedsigner.views.view import CameraConnectionErrorView, NetworkMismatchErrorView, OptionDisabledView, PowerOffView, View
 
 from .utils import ScreenshotComplete, ScreenshotConfig, ScreenshotRenderer
 
@@ -50,11 +50,12 @@ import warnings; warnings.warn = lambda *args, **kwargs: None
 
 # Dynamically generate a pytest test run for each locale
 @pytest.mark.parametrize("locale", [x for x, y in SettingsConstants.get_detected_languages()])
-def test_generate_all(locale, target_locale):
+def test_generate_all(locale, target_locale, screenshot_output):
     """
-    `target_locale` is a fixture created in conftest.py via the `--locale` command line arg.
+    `target_locale` and `screenshot_output` are command-line fixtures.
 
-    Optionally skips all other locales.
+    Optionally skips all other locales or writes outside the tracked screenshot
+    submodule.
     """
     if target_locale and locale != target_locale:
         pytest.skip(f"Skipping {locale}")
@@ -64,7 +65,7 @@ def test_generate_all(locale, target_locale):
         # the device if we don't have libraqm.
         pytest.fail("libraqm is not installed.")
     
-    generate_screenshots(locale)
+    generate_screenshots(locale, screenshot_root=screenshot_output)
 
 
 
@@ -136,7 +137,19 @@ class SeedExportXpubQR_ScreenBrightnessView(seed_views.SeedExportXpubQRDisplayVi
 
 
 
-def generate_screenshots(locale):
+class ScreensaverDeterministicView(View):
+    def run(self):
+        renderer = Renderer.get_instance()
+        screen = ScreensaverScreen(buttons=MagicMock())
+        renderer.show_image(
+            screen.render_frame(
+                x=screen.max_coords[0] * 0.25,
+                y=screen.max_coords[1] * 0.75,
+            )
+        )
+
+
+def generate_screenshots(locale, screenshot_root=None):
     """
         The `Renderer` class is mocked so that calls in the normal code are ignored
         (necessary to avoid having it trying to wire up hardware dependencies).
@@ -145,7 +158,12 @@ def generate_screenshots(locale):
         `ScreenshotRenderer`.
     """
     # Prep the ScreenshotRenderer that will be patched over the normal Renderer
-    screenshot_root = os.path.join(os.getcwd(), "seedsigner-screenshots")
+    if screenshot_root is None:
+        screenshot_root = os.path.join(os.getcwd(), "seedsigner-screenshots")
+    else:
+        screenshot_root = os.path.abspath(screenshot_root)
+    os.makedirs(screenshot_root, exist_ok=True)
+
     ScreenshotRenderer.configure_instance()
     screenshot_renderer: ScreenshotRenderer = ScreenshotRenderer.get_instance()
 
@@ -320,6 +338,7 @@ def generate_screenshots(locale):
             "Main Menu Views": [
                 ScreenshotConfig(OpeningSplashView, dict(force_partner_logos=True)),
                 ScreenshotConfig(OpeningSplashView, dict(force_partner_logos=False), screenshot_name="OpeningSplashView_no_partner_logos"),
+                ScreenshotConfig(ScreensaverDeterministicView, screenshot_name="ScreensaverScreen_cow_deterministic"),
                 ScreenshotConfig(MainMenuView),
                 ScreenshotConfig(MainMenuView, screenshot_name='MainMenuView_SDCardStateChangeToast_removed',  toast_thread=SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__REMOVED, activation_delay=0, duration=0)),
                 ScreenshotConfig(MainMenuView, screenshot_name='MainMenuView_SDCardStateChangeToast_inserted', toast_thread=SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__INSERTED, activation_delay=0, duration=0)),
