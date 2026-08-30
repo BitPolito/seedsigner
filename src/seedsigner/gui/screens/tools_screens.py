@@ -87,7 +87,7 @@ class ToolsImageEntropyLivePreviewScreen(BaseScreen):
                             self.renderer.canvas_height - GUIConstants.EDGE_PADDING
                         ),
                         text=_("Capturing image..."),
-                        fill=GUIConstants.ACCENT_COLOR,
+                        fill=GUIConstants.PRIMARY_COLOR,
                         font=instructions_font,
                         stroke_width=4,
                         stroke_fill=GUIConstants.BACKGROUND_COLOR,
@@ -362,7 +362,7 @@ class ToolsCalcFinalWordScreen(ButtonListScreen):
             text=self.checksum_bits,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
             font_size=bit_font_size,
-            font_color=GUIConstants.ACCENT_COLOR,
+            font_color=GUIConstants.PRIMARY_COLOR,
             edge_padding=0,
             screen_x=checksum_x,
             screen_y=screen_y,
@@ -395,7 +395,7 @@ class ToolsCalcFinalWordScreen(ButtonListScreen):
         self.components.append(TextArea(
             text=self.checksum_bits,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
-            font_color=GUIConstants.ACCENT_COLOR,
+            font_color=GUIConstants.PRIMARY_COLOR,
             font_size=bit_font_size,
             edge_padding=0,
             screen_x=checksum_x,

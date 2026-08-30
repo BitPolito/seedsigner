@@ -284,7 +284,7 @@ class InfoToast(DefaultToast):
             icon_name=SeedSignerIconConstants.INFO,
             label_text=self.label_text,
             color=GUIConstants.INFO_COLOR,
-            font_color=GUIConstants.BODY_FONT_COLOR,
+            font_color=GUIConstants.INFO_COLOR,
             font_size=body_font_size,
         )
     
@@ -297,7 +297,7 @@ class SuccessToast(DefaultToast):
             icon_name=SeedSignerIconConstants.SUCCESS,
             label_text=self.label_text,
             color=GUIConstants.SUCCESS_COLOR,
-            font_color=GUIConstants.BODY_FONT_COLOR,
+            font_color=GUIConstants.SUCCESS_COLOR,
             font_size=body_font_size,
         )
     
@@ -310,7 +310,7 @@ class WarningToast(DefaultToast):
             icon_name=SeedSignerIconConstants.WARNING,
             label_text=self.label_text,
             color=GUIConstants.WARNING_COLOR,
-            font_color=GUIConstants.BODY_FONT_COLOR,
+            font_color=GUIConstants.WARNING_COLOR,
             font_size=body_font_size,
         )
     
@@ -323,7 +323,7 @@ class DireWarningToast(DefaultToast):
             icon_name=SeedSignerIconConstants.WARNING,
             label_text=self.label_text,
             color=GUIConstants.DIRE_WARNING_COLOR,
-            font_color=GUIConstants.BODY_FONT_COLOR,
+            font_color=GUIConstants.DIRE_WARNING_COLOR,
             font_size=body_font_size,
         )
 
@@ -336,6 +336,6 @@ class ErrorToast(DefaultToast):
             icon_name=SeedSignerIconConstants.ERROR,
             label_text=self.label_text,
             color=GUIConstants.ERROR_COLOR,
-            font_color=GUIConstants.BODY_FONT_COLOR,
+            font_color=GUIConstants.ERROR_COLOR,
             font_size=body_font_size,
         )

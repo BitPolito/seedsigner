@@ -4,21 +4,23 @@ requires = ["setuptools", "wheel"]
 
 [project]
 authors = [{name = "SeedSigner", email = "author@example.com"}]
+maintainers = [{name = "BitPolito"}]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent"
 ]
-description = "Build an offline, airgapped Bitcoin signing device for less than $50!"
+description = "BitPolito visual customization of SeedSigner 0.8.7"
 name = "seedsigner"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.8.7"
+version = "0.8.7+bitpolito.1"
 
 [project.urls]
-"Bug Tracker" = "https://github.com/SeedSigner/seedsigner/issues"
-Homepage = "https://seedsigner.com/"
-Repository = "https://github.com/SeedSigner/seedsigner"
+"Bug Tracker" = "https://github.com/BitPolito/seedsigner/issues"
+Homepage = "https://github.com/BitPolito/seedsigner"
+Repository = "https://github.com/BitPolito/seedsigner"
+Upstream = "https://github.com/SeedSigner/seedsigner"
 
 [tool.coverage.html]
 directory = "coverage_html_report"

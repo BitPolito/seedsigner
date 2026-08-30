@@ -20,6 +20,8 @@ from seedsigner.views.view import Destination, View
 
 logger = logging.getLogger(__name__)
 
+_SCREENSAVER_ACTIVATION_MS = 30 * 1000
+
 
 
 class BackStack(list[Destination]):
@@ -100,7 +102,7 @@ class Controller(Singleton):
         rather than at the top in order avoid circular imports.
     """
 
-    VERSION = "0.8.7"
+    VERSION = "0.8.7-bitpolito.1"
 
     # Declare class member vars with type hints to enable richer IDE support throughout
     # the code.
@@ -194,7 +196,7 @@ class Controller(Singleton):
         controller.back_stack = BackStack()
 
         # Other behavior constants
-        controller.screensaver_activation_ms = 2 * 60 * 1000  # two minutes
+        controller.screensaver_activation_ms = _SCREENSAVER_ACTIVATION_MS
     
         background_import_thread = BackgroundImportThread()
         background_import_thread.start()

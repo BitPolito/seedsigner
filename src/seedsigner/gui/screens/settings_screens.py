@@ -307,7 +307,7 @@ class DonateScreen(BaseTopNavScreen):
             text="seedsigner.com",
             font_name=GUIConstants.get_body_font_name(),
             font_size=28,
-            font_color=GUIConstants.ACCENT_COLOR,
+            font_color=GUIConstants.PRIMARY_COLOR,
             supersampling_factor=1,
             screen_y=self.components[-1].screen_y + self.components[-1].height + GUIConstants.COMPONENT_PADDING
         ))

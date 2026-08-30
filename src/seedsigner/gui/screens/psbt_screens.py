@@ -77,10 +77,10 @@ class PSBTOverviewScreen(ButtonListScreen):
         if vertical_center % 2 == 1:
             vertical_center += 1
 
-        association_line_color = "#666"
+        association_line_color = GUIConstants.ACCENT_COLOR
         association_line_width = 3*ssf
         curve_steps = 4
-        chart_font_color = "#ddd"
+        chart_font_color = GUIConstants.PRIMARY_COLOR
         
         # First calculate how wide the inputs col will be
         inputs_column = []
@@ -390,7 +390,7 @@ class PSBTOverviewScreen(ButtonListScreen):
 
         def run(self):
             pulse_color = GUIConstants.ACCENT_COLOR
-            reset_color = "#666"
+            reset_color = GUIConstants.ACCENT_COLOR
             line_width = 3
 
             pulses = []
@@ -518,7 +518,11 @@ class PSBTMathScreen(ButtonListScreen):
         body_width = self.canvas_width - 2*GUIConstants.EDGE_PADDING
         body_height = self.buttons[0].screen_y - self.top_nav.height - 2*GUIConstants.COMPONENT_PADDING
         ssf = 2  # Super-sampling factor
-        image = Image.new("RGB", (body_width*ssf, body_height*ssf))
+        image = Image.new(
+            "RGB",
+            (body_width*ssf, body_height*ssf),
+            GUIConstants.BACKGROUND_COLOR,
+        )
         draw = ImageDraw.Draw(image)
 
         body_font = Fonts.get_font(GUIConstants.get_body_font_name(), (GUIConstants.get_body_font_size())*ssf)
@@ -530,8 +534,8 @@ class PSBTMathScreen(ButtonListScreen):
         cur_y = 0
 
         def render_amount(cur_y, amount_str, info_text, info_text_color=GUIConstants.BODY_FONT_COLOR):
-            secondary_digit_color = "#888"
-            tertiary_digit_color = "#666"
+            secondary_digit_color = GUIConstants.ACCENT_COLOR
+            tertiary_digit_color = GUIConstants.ACCENT_COLOR
             digit_group_spacing = 2 * ssf
             # secondary_digit_color = GUIConstants.BODY_FONT_COLOR
             # tertiary_digit_color = GUIConstants.BODY_FONT_COLOR
@@ -584,7 +588,7 @@ class PSBTMathScreen(ButtonListScreen):
             f" {self.change_amount}",
             # TRANSLATOR_NOTE: Denonination is inserted (e.g. your "btc change" or "sats change")
             info_text=_("{} change").format(denomination),
-            info_text_color="darkorange"  # super-sampling alters the perceived color
+            info_text_color=GUIConstants.WARNING_COLOR,
         )
 
         # Resize to target and sharpen final image

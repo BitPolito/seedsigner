@@ -4,8 +4,6 @@ import random
 import time
 
 from dataclasses import dataclass
-from gettext import gettext as _
-
 from seedsigner.gui.components import Fonts, GUIConstants, load_image
 from seedsigner.gui.screens.screen import BaseScreen
 from seedsigner.models.settings import Settings
@@ -20,10 +18,10 @@ logger = logging.getLogger(__name__)
 class LogoScreen(BaseScreen):
     def __init__(self):
         super().__init__()
-        self.logo = load_image("logo_black_240.png")
+        self.logo = load_image("bitpolito_splash.png")
 
         self.partners = [
-            "hrf",
+            "bitpolito",
         ]
 
         self.partner_logos: dict = {}
@@ -62,106 +60,146 @@ class OpeningSplashScreen(LogoScreen):
     def _render(self):
         from PIL import Image
         from seedsigner.controller import Controller
+
         controller = Controller.get_instance()
 
-        # TODO: Fix for the screenshot generator. When generating screenshots for
-        # multiple locales, there is a button still in the canvas from the previous
-        # screenshot, even though the Renderer has been reconfigured and re-
-        # instantiated. This is a hack to clear the screen for now.
+        # Clear stale pixels left by a previously rendered screen or locale.
         self.clear_screen()
 
-        show_partner_logos = Settings.get_instance().get_value(SettingsConstants.SETTING__PARTNER_LOGOS) == SettingsConstants.OPTION__ENABLED
+        show_partner_logos = (
+            Settings.get_instance().get_value(SettingsConstants.SETTING__PARTNER_LOGOS)
+            == SettingsConstants.OPTION__ENABLED
+        )
         if self.force_partner_logos is not None:
             show_partner_logos = self.force_partner_logos
 
-        logo_offset_x = int((self.canvas_width - self.logo.width)/2)
+        logo_offset_x = int((self.canvas_width - self.logo.width) / 2)
+        logo_offset_y = -min(56, self.canvas_height // 4) if show_partner_logos else 0
 
-        if show_partner_logos:
-            logo_offset_y = -56
-        else:
-            logo_offset_y = 0
-
-        background = Image.new("RGBA", size=self.logo.size, color="black")
+        # Keep load_image RGB-compatible; transparency is only needed locally for the
+        # splash fade.
+        logo_rgba = self.logo.convert("RGBA")
+        background = Image.new(
+            "RGBA",
+            size=self.logo.size,
+            color=GUIConstants.BACKGROUND_COLOR,
+        )
         if not self.renderer.is_screenshot_generator:
-            # Fade in alpha
-            for i in range(250, -1, -25):
-                self.logo.putalpha(255 - i)
+            for alpha in range(5, 256, 25):
+                fade_frame = logo_rgba.copy()
+                fade_frame.putalpha(alpha)
                 self.renderer.canvas.paste(
-                    Image.alpha_composite(background, self.logo),
-                    (logo_offset_x, logo_offset_y)
+                    Image.alpha_composite(background, fade_frame).convert("RGB"),
+                    (logo_offset_x, logo_offset_y),
                 )
                 self.renderer.show_image()
         else:
-            # Skip animation for the screenshot generator
             self.renderer.canvas.paste(self.logo, (logo_offset_x, logo_offset_y))
 
-        # Display version num below SeedSigner logo
-        font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_top_nav_title_font_size())
-        version = f"v{controller.VERSION}"
-
-        # The logo png is 240x240, but the actual logo is 70px tall, vertically centered
-        logo_height = 70
-        version_x = int(self.renderer.canvas_width/2)
-        version_y = int(self.canvas_height/2) + int(logo_height/2) + logo_offset_y + GUIConstants.COMPONENT_PADDING
-        self.renderer.draw.text(xy=(version_x, version_y), text=version, font=font, fill=GUIConstants.ACCENT_COLOR, anchor="mt")
+        # The version is deliberately visible on every splash variant.
+        version_font = Fonts.get_font(
+            GUIConstants.get_body_font_name(),
+            GUIConstants.get_top_nav_title_font_size(),
+        )
+        base_version = controller.VERSION.partition("-")[0]
+        version = f"v{base_version}"
+        version_x = int(self.canvas_width / 2)
+        version_y = (
+            int(self.canvas_height / 2)
+            + 35
+            + logo_offset_y
+            + GUIConstants.COMPONENT_PADDING
+        )
+        self.renderer.draw.text(
+            xy=(version_x, version_y),
+            text=version,
+            font=version_font,
+            fill=GUIConstants.PRIMARY_COLOR,
+            anchor="mt",
+        )
 
         if not self.renderer.is_screenshot_generator:
             self.renderer.show_image()
 
         if show_partner_logos:
             if not self.renderer.is_screenshot_generator:
-                # Hold on the version num for a moment
                 time.sleep(1)
 
-            # Set up the partner logo
-            partner_logo: Image.Image = self.partner_logos[self.get_random_partner()]
-            font = Fonts.get_font(GUIConstants.get_top_nav_title_font_name(), GUIConstants.get_body_font_size())
-            # TRANSLATOR_NOTE: This is on the opening splash screen, displayed above the HRF logo
-            sponsor_text = _("With support from:")
-            (left, top, tw, th) = font.getbbox(sponsor_text, anchor="lt")
+            partner_logo = self.partner_logos[self.get_random_partner()]
+            brand_font = Fonts.get_font(
+                GUIConstants.get_body_font_name(),
+                GUIConstants.LABEL_FONT_SIZE,
+            )
+            sponsor_text = "designed by"
+            left, top, right, bottom = brand_font.getbbox(sponsor_text, anchor="lt")
+            text_height = bottom - top
 
-            x = int((self.renderer.canvas_width) / 2)
-            y = self.canvas_height - GUIConstants.COMPONENT_PADDING - partner_logo.height - int(GUIConstants.COMPONENT_PADDING/2) - th
-            self.renderer.draw.text(xy=(x, y), text=sponsor_text, font=font, fill="#ccc", anchor="mt")
+            x = int(self.canvas_width / 2)
+            y = (
+                self.canvas_height
+                - GUIConstants.COMPONENT_PADDING
+                - partner_logo.height
+                - int(GUIConstants.COMPONENT_PADDING / 2)
+                - text_height
+            )
+            self.renderer.draw.text(
+                xy=(x, y),
+                text=sponsor_text,
+                font=brand_font,
+                fill=GUIConstants.PRIMARY_COLOR,
+                anchor="mt",
+            )
             self.renderer.canvas.paste(
                 partner_logo,
                 (
-                    int((self.renderer.canvas_width - partner_logo.width) / 2),
-                    y + th + int(GUIConstants.COMPONENT_PADDING/2)
-                )
+                    int((self.canvas_width - partner_logo.width) / 2),
+                    y + text_height + int(GUIConstants.COMPONENT_PADDING / 2),
+                ),
             )
-
             self.renderer.show_image()
 
         if not self.renderer.is_screenshot_generator:
-            # Hold on the splash screen for a moment
             time.sleep(2)
 
 
 
-class ScreensaverScreen(LogoScreen):
+class ScreensaverScreen(BaseScreen):
     def __init__(self, buttons):
+        from pathlib import Path
         from PIL import Image
-        super().__init__()
 
+        super().__init__()
         self.buttons = buttons
 
-        # Paste the logo in a bigger image that is the canvas + the logo dims (half the
-        # logo will render off the canvas at each edge).
-        self.image = Image.new("RGB", (self.renderer.canvas_width + self.logo.width, self.renderer.canvas_height + self.logo.height), (0,0,0))
+        # Keep load_image returning RGB. The cow is the only runtime asset that needs
+        # transparency, so it is opened and converted locally.
+        cow_path = (
+            Path(__file__).parent.parent
+            / "resources"
+            / "img"
+            / "cow.png"
+        )
+        cow_asset = Image.open(cow_path).convert("RGBA")
+        alpha_bbox = cow_asset.getchannel("A").getbbox()
+        if alpha_bbox is None:
+            raise ValueError("cow.png has no visible pixels")
 
-        # Place the logo centered on the larger image
-        logo_x = int((self.image.width - self.logo.width) / 2)
-        logo_y = int((self.image.height - self.logo.height) / 2)
-        self.image.paste(self.logo, (logo_x, logo_y))
+        self.sprite = cow_asset.crop(alpha_bbox)
+        self.sprite.thumbnail(
+            (
+                max(1, int(self.renderer.canvas_width * 0.60)),
+                max(1, int(self.renderer.canvas_height * 0.60)),
+            ),
+            Image.Resampling.LANCZOS,
+        )
 
         self.min_coords = (0, 0)
-        self.max_coords = (self.renderer.canvas_width, self.renderer.canvas_height)
-
-        # Update our first rendering position so we're centered
-        self.cur_x = int(self.logo.width / 2)
-        self.cur_y = int(self.logo.height / 2)
-
+        self.max_coords = (
+            max(0, self.renderer.canvas_width - self.sprite.width),
+            max(0, self.renderer.canvas_height - self.sprite.height),
+        )
+        self.cur_x = self.max_coords[0] / 2
+        self.cur_y = self.max_coords[1] / 2
         self.increment_x = self.rand_increment()
         self.increment_y = self.rand_increment()
 
@@ -172,15 +210,49 @@ class ScreensaverScreen(LogoScreen):
     @property
     def is_running(self):
         return self._is_running
-    
+
 
     def rand_increment(self):
-        max_increment = 10.0
-        min_increment = 1.0
-        increment = random.uniform(min_increment, max_increment)
+        increment = random.uniform(1.0, 4.0)
         if random.uniform(-1.0, 1.0) < 0.0:
-            return -1.0 * increment
+            return -increment
         return increment
+
+
+    def render_frame(self, x=None, y=None):
+        from PIL import Image
+
+        if x is None:
+            x = self.cur_x
+        if y is None:
+            y = self.cur_y
+
+        frame = Image.new(
+            "RGBA",
+            (self.renderer.canvas_width, self.renderer.canvas_height),
+            GUIConstants.BACKGROUND_COLOR,
+        )
+        frame.alpha_composite(self.sprite, (int(round(x)), int(round(y))))
+        return frame.convert("RGB")
+
+
+    def advance_frame(self):
+        self.cur_x += self.increment_x
+        self.cur_y += self.increment_y
+
+        if self.cur_x < self.min_coords[0]:
+            self.cur_x = self.min_coords[0]
+            self.increment_x = abs(self.rand_increment())
+        elif self.cur_x > self.max_coords[0]:
+            self.cur_x = self.max_coords[0]
+            self.increment_x = -abs(self.rand_increment())
+
+        if self.cur_y < self.min_coords[1]:
+            self.cur_y = self.min_coords[1]
+            self.increment_y = abs(self.rand_increment())
+        elif self.cur_y > self.max_coords[1]:
+            self.cur_y = self.max_coords[1]
+            self.increment_y = -abs(self.rand_increment())
 
 
     def start(self):
@@ -188,68 +260,26 @@ class ScreensaverScreen(LogoScreen):
             return
 
         self._is_running = True
-
-        # Store the current screen in order to restore it later
         self.last_screen = self.renderer.canvas.copy()
 
-        screensaver_start = int(time.time() * 1000)
-
-        # Screensaver must block any attempts to use the Renderer in another thread so it
-        # never gives up the lock until it returns.
+        # Hold the Renderer lock until input stops the screensaver, matching upstream.
         with self.renderer.lock:
             try:
                 while self._is_running:
                     if self.buttons.has_any_input() or self.buttons.override_ind:
                         break
 
-                    # Must crop the image to the exact display size
-                    crop = self.image.crop((
-                        self.cur_x, self.cur_y,
-                        self.cur_x + self.renderer.canvas_width, self.cur_y + self.renderer.canvas_height))
-                    self.renderer.disp.show_image(crop, 0, 0)
-
-                    self.cur_x += self.increment_x
-                    self.cur_y += self.increment_y
-
-                    # At each edge bump, calculate a new random rate of change for that axis
-                    if self.cur_x < self.min_coords[0]:
-                        self.cur_x = self.min_coords[0]
-                        self.increment_x = self.rand_increment()
-                        if self.increment_x < 0.0:
-                            self.increment_x *= -1.0
-                    elif self.cur_x > self.max_coords[0]:
-                        self.cur_x = self.max_coords[0]
-                        self.increment_x = self.rand_increment()
-                        if self.increment_x > 0.0:
-                            self.increment_x *= -1.0
-
-                    if self.cur_y < self.min_coords[1]:
-                        self.cur_y = self.min_coords[1]
-                        self.increment_y = self.rand_increment()
-                        if self.increment_y < 0.0:
-                            self.increment_y *= -1.0
-                    elif self.cur_y > self.max_coords[1]:
-                        self.cur_y = self.max_coords[1]
-                        self.increment_y = self.rand_increment()
-                        if self.increment_y > 0.0:
-                            self.increment_y *= -1.0
+                    self.renderer.disp.show_image(self.render_frame(), 0, 0)
+                    self.advance_frame()
 
             except KeyboardInterrupt as e:
-                # Exit triggered; close gracefully
                 logger.info("Shutting down Screensaver")
-
-                # Have to let the interrupt bubble up to exit the main app
                 raise e
 
             finally:
                 self._is_running = False
-
-                # Restore the original screen
                 self.renderer.show_image(self.last_screen)
-
 
 
     def stop(self):
         self._is_running = False
-
-

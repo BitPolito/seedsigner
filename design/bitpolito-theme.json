@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "project": "BitPolito SeedSigner",
+  "release": "0.8.7-bitpolito.1",
+  "upstream": {
+    "application_commit": "e0a80d4b33b8eb7fb1e9fd14a27b7cd11c7d2cd6",
+    "os_commit": "d13859392660fe512a753bc14ecd0edc86c35510"
+  },
+  "behavior": {
+    "screensaver_timeout_seconds": 30
+  },
+  "colors": {
+    "background": "#FFFFFF",
+    "primary": "#001CE0",
+    "accent": "#6666FF",
+    "text_on_primary": "#FFFFFF",
+    "secondary_surface": "#F3F5FF",
+    "inactive": "#667085",
+    "warning": "#8A5A00",
+    "error": "#B42318",
+    "success": "#087A45",
+    "info": "#005FCC"
+  },
+  "assets": {
+    "splash": {
+      "source_path": "design/source-assets/bitpolito-splash.png",
+      "source_sha256": "5a2ac06253545d09a54f1a928910bd94201f0e7a56d5b4d1af6694823f85b59a",
+      "path": "src/seedsigner/resources/img/bitpolito_splash.png",
+      "sha256": "bbb1ea54041c0b81f4e61caeda972630caf47b982ca7501cf36ced8f8ac6bc26",
+      "size": [240, 240],
+      "mode": "RGB"
+    },
+    "partner_logo": {
+      "source_path": "design/source-assets/bitpolito-logo.png",
+      "source_sha256": "62276b3cdc27e9d7e4d8dfa08c56f732a428fe1a8e0e065ae0824fc43f499b51",
+      "path": "src/seedsigner/resources/img/partners/bitpolito_logo.png",
+      "sha256": "9e966ea90021d0cc6eefb7aa669045bb9507cbd984060d39779faf5afbb14b0f",
+      "size": [200, 59],
+      "mode": "RGB"
+    },
+    "screensaver": {
+      "source_path": "design/source-assets/cow.png",
+      "source_sha256": "a54049869dee5b6a71d9043a4973e91fa0606cb627d61aa2170ef79280e87a9b",
+      "path": "src/seedsigner/resources/img/cow.png",
+      "sha256": "6515ae813ecfc7b44bfaf944d74ddf5bfa0ee82015d93e63a4b8ddefa7faa93c",
+      "size": [240, 240],
+      "mode": "RGBA"
+    }
+  }
+}

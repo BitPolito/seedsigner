@@ -87,7 +87,7 @@ class BaseScreen(BaseComponent):
         # Clear the whole canvas
         self.image_draw.rectangle(
             (0, 0, self.canvas_width, self.canvas_height),
-            fill=0,
+            fill=GUIConstants.BACKGROUND_COLOR,
         )
 
 
@@ -155,8 +155,8 @@ class LoadingScreenThread(BaseThread):
         )
         position = 0
         arc_sweep = 45
-        arc_color = "#ff9416"
-        arc_trailing_color = "#80490b"
+        arc_color = GUIConstants.PRIMARY_COLOR
+        arc_trailing_color = GUIConstants.ACCENT_COLOR
 
         # Need to flush the screen
         with renderer.lock:
@@ -304,7 +304,7 @@ class ButtonListScreen(BaseTopNavScreen):
     button_font_name: str = None
     button_font_size: int = None
 
-    button_selected_color: str = GUIConstants.ACCENT_COLOR
+    button_selected_color: str = GUIConstants.BUTTON_SELECTED_COLOR
 
     # Params for version of list used for Settings
     Button_cls = Button
@@ -389,18 +389,18 @@ class ButtonListScreen(BaseTopNavScreen):
 
         if self.has_scroll_arrows:
             self.arrow_half_width = 10
-            self.up_arrow_img = Image.new("RGBA", size=(2 * self.arrow_half_width, 8), color="black")
+            self.up_arrow_img = Image.new("RGB", size=(2 * self.arrow_half_width, 8), color=GUIConstants.BACKGROUND_COLOR)
             self.up_arrow_img_y = self.top_nav.height - 12
             arrow_draw = ImageDraw.Draw(self.up_arrow_img)
-            arrow_draw.line((self.arrow_half_width, 1, 0, 7), fill=GUIConstants.BUTTON_FONT_COLOR)
-            arrow_draw.line((self.arrow_half_width, 1, 2 * self.arrow_half_width, 7), fill=GUIConstants.BUTTON_FONT_COLOR)
+            arrow_draw.line((self.arrow_half_width, 1, 0, 7), fill=GUIConstants.ACCENT_COLOR)
+            arrow_draw.line((self.arrow_half_width, 1, 2 * self.arrow_half_width, 7), fill=GUIConstants.ACCENT_COLOR)
 
-            self.down_arrow_img = Image.new("RGBA", size=(2 * self.arrow_half_width, 8), color="black")
+            self.down_arrow_img = Image.new("RGB", size=(2 * self.arrow_half_width, 8), color=GUIConstants.BACKGROUND_COLOR)
             self.down_arrow_img_y = self.canvas_height - 16 + 2
             arrow_draw = ImageDraw.Draw(self.down_arrow_img)
             center_x = int(self.canvas_width / 2)
-            arrow_draw.line((self.arrow_half_width, 7, 0, 1), fill=GUIConstants.BUTTON_FONT_COLOR)
-            arrow_draw.line((self.arrow_half_width, 7, 2 * self.arrow_half_width, 1), fill=GUIConstants.BUTTON_FONT_COLOR)
+            arrow_draw.line((self.arrow_half_width, 7, 0, 1), fill=GUIConstants.ACCENT_COLOR)
+            arrow_draw.line((self.arrow_half_width, 7, 2 * self.arrow_half_width, 1), fill=GUIConstants.ACCENT_COLOR)
 
         cur_selected_button = self.buttons[self.selected_button]
         cur_selected_button.is_selected = True
@@ -458,7 +458,7 @@ class ButtonListScreen(BaseTopNavScreen):
                 int(self.canvas_width / 2) - self.arrow_half_width, self.up_arrow_img_y,
                 int(self.canvas_width / 2) + self.arrow_half_width, self.up_arrow_img_y + self.up_arrow_img.height
             ),
-            fill="black"
+            fill=GUIConstants.BACKGROUND_COLOR
         )
 
     def _hide_down_arrow(self):
@@ -467,7 +467,7 @@ class ButtonListScreen(BaseTopNavScreen):
                 int(self.canvas_width / 2) - self.arrow_half_width, self.down_arrow_img_y,
                 int(self.canvas_width / 2) + self.arrow_half_width, self.down_arrow_img_y + self.down_arrow_img.height
             ),
-            fill="black"
+            fill=GUIConstants.BACKGROUND_COLOR
         )
 
 
@@ -581,7 +581,7 @@ class LargeButtonScreen(BaseTopNavScreen):
     button_font_name: str = None
     button_font_size: int = None
 
-    button_selected_color: str = GUIConstants.ACCENT_COLOR
+    button_selected_color: str = GUIConstants.BUTTON_SELECTED_COLOR
     selected_button: int = 0
 
     def __post_init__(self):
@@ -774,6 +774,7 @@ class QRDisplayScreen(BaseScreen):
                 screen_x=GUIConstants.EDGE_PADDING*2 + 1,
                 screen_y=GUIConstants.COMPONENT_PADDING + 4,  # +4 fudge factor to account for where the chevron is drawn relative to baseline
                 icon_name=SeedSignerIconConstants.CHEVRON_UP,
+                icon_color=GUIConstants.TEXT_ON_PRIMARY_COLOR,
                 icon_size=GUIConstants.get_body_font_size(),
             )
             chevron_up_icon.render()
@@ -784,6 +785,7 @@ class QRDisplayScreen(BaseScreen):
                 screen_x=chevron_up_icon.screen_x,
                 screen_y=chevron_up_icon.screen_y + chevron_up_icon.icon_size + GUIConstants.BODY_LINE_SPACING,
                 icon_name=SeedSignerIconConstants.CHEVRON_DOWN,
+                icon_color=GUIConstants.TEXT_ON_PRIMARY_COLOR,
                 icon_size=chevron_up_icon.icon_size,
             )
             chevron_down_icon.render()
@@ -797,6 +799,7 @@ class QRDisplayScreen(BaseScreen):
                 font_size=GUIConstants.get_body_font_size(),
                 font_name=GUIConstants.get_button_font_name(),
                 background_color=(0, 0, 0, overlay_opacity),
+                font_color=GUIConstants.TEXT_ON_PRIMARY_COLOR,
                 edge_padding=0,
                 is_text_centered=False,
                 auto_line_break=False,
@@ -814,6 +817,7 @@ class QRDisplayScreen(BaseScreen):
                 font_size=GUIConstants.get_body_font_size(),
                 font_name=GUIConstants.get_button_font_name(),
                 background_color=(0, 0, 0, overlay_opacity),
+                font_color=GUIConstants.TEXT_ON_PRIMARY_COLOR,
                 edge_padding=0,
                 is_text_centered=False,
                 auto_line_break=False,

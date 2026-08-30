@@ -215,7 +215,7 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
                 draw.text(
                     (word_indent, self.cur_y),
                     self.possible_words[i],
-                    fill="#ddd",
+                    fill=GUIConstants.SECONDARY_TEXT_COLOR,
                     font=self.word_font,
                     anchor="ls",
                 )
@@ -1106,7 +1106,7 @@ class SeedReviewPassphraseScreen(ButtonListScreen):
                 text=line,
                 font_name=GUIConstants.FIXED_WIDTH_FONT_NAME,
                 font_size=font_size,
-                font_color="orange",
+                font_color=GUIConstants.WARNING_COLOR,
                 is_text_centered=True,
                 screen_y=screen_y,
             ))
@@ -1276,8 +1276,8 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
 
         zone_labels = Image.new("RGBA", (self.canvas_width, self.canvas_height), (255,255,255,0))
         zone_labels_draw = ImageDraw.Draw(zone_labels)
-        zone_labels_draw.rectangle((self.zone_mask_offset_x, 0, self.canvas_width - self.zone_mask_offset_x, self.pixels_per_module), fill=GUIConstants.ACCENT_COLOR)
-        zone_labels_draw.rectangle((0, self.zone_mask_offset_y, self.pixels_per_module, self.canvas_height - self.zone_mask_offset_y), fill=GUIConstants.ACCENT_COLOR)
+        zone_labels_draw.rectangle((self.zone_mask_offset_x, 0, self.canvas_width - self.zone_mask_offset_x, self.pixels_per_module), fill=GUIConstants.PRIMARY_COLOR)
+        zone_labels_draw.rectangle((0, self.zone_mask_offset_y, self.pixels_per_module, self.canvas_height - self.zone_mask_offset_y), fill=GUIConstants.PRIMARY_COLOR)
 
         label_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, 28)
         x_label = zone_labels_x[self.cur_zone_x]

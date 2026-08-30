@@ -27,14 +27,21 @@ class GUIConstants:
     COMPONENT_PADDING = 8
     LIST_ITEM_PADDING = 4
 
-    BACKGROUND_COLOR = "#000000"
-    INACTIVE_COLOR = "#414141"
-    ACCENT_COLOR = "#FF9F0A" # Active Color
-    WARNING_COLOR = "#FFD60A"
-    DIRE_WARNING_COLOR = "#FF5700"
-    ERROR_COLOR = "#FF1B0A"
-    SUCCESS_COLOR = "#30D158"
-    INFO_COLOR = "#409CFF"
+    # BitPolito theme tokens. Keep these internal to the GUI layer so the application
+    # behavior and public interfaces remain identical to upstream SeedSigner.
+    BACKGROUND_COLOR = "#FFFFFF"
+    PRIMARY_COLOR = "#001CE0"
+    ACCENT_COLOR = "#6666FF"
+    TEXT_ON_PRIMARY_COLOR = "#FFFFFF"
+    SECONDARY_SURFACE_COLOR = "#F3F5FF"
+    INACTIVE_COLOR = "#667085"
+    WARNING_COLOR = "#8A5A00"
+    DIRE_WARNING_COLOR = "#B42318"
+    ERROR_COLOR = "#B42318"
+    SUCCESS_COLOR = "#087A45"
+    INFO_COLOR = "#005FCC"
+    # Secondary text is blue for readable metadata and labels on light surfaces.
+    SECONDARY_TEXT_COLOR = INFO_COLOR
     # BITCOIN_ORANGE = "#FF9416"  # not used
     TESTNET_COLOR = "#00F100"
     REGTEST_COLOR = "#00CAF1"
@@ -81,7 +88,7 @@ class GUIConstants:
     }
     BODY_FONT_MAX_SIZE = TOP_NAV_TITLE_FONT_SIZE["default"]
     BODY_FONT_MIN_SIZE = 15
-    BODY_FONT_COLOR = "#FCFCFC"
+    BODY_FONT_COLOR = PRIMARY_COLOR
     BODY_LINE_SPACING = COMPONENT_PADDING
 
     FIXED_WIDTH_FONT_NAME = "Inconsolata-Regular"
@@ -89,7 +96,7 @@ class GUIConstants:
 
     # TODO: this should have a get_label_font_size() method like the others for l10n
     LABEL_FONT_SIZE = BODY_FONT_MIN_SIZE
-    LABEL_FONT_COLOR = "#777777"
+    LABEL_FONT_COLOR = SECONDARY_TEXT_COLOR
 
     BUTTON_FONT_NAME = BASE_LOCALE_FONTS.copy()
     BUTTON_FONT_NAME["default"] = "OpenSans-SemiBold"
@@ -102,12 +109,13 @@ class GUIConstants:
         SettingsConstants.LOCALE__KOREAN: 20,
         SettingsConstants.LOCALE__CHINESE_SIMPLIFIED: 20,
     }
-    BUTTON_FONT_COLOR = "#FCFCFC"
-    BUTTON_BACKGROUND_COLOR = "#2C2C2C"
+    BUTTON_FONT_COLOR = PRIMARY_COLOR
+    BUTTON_BACKGROUND_COLOR = SECONDARY_SURFACE_COLOR
+    BUTTON_SELECTED_COLOR = PRIMARY_COLOR
     BUTTON_HEIGHT = 32
-    BUTTON_SELECTED_FONT_COLOR = BACKGROUND_COLOR
+    BUTTON_SELECTED_FONT_COLOR = TEXT_ON_PRIMARY_COLOR
     
-    NOTIFICATION_COLOR = "#00F100"
+    NOTIFICATION_COLOR = SUCCESS_COLOR
 
 
     @staticmethod
@@ -933,7 +941,7 @@ class FormattedAddress(BaseComponent):
     max_lines: int = None
     font_name: str = GUIConstants.FIXED_WIDTH_FONT_NAME
     font_size: int = 24
-    font_accent_color: str = GUIConstants.ACCENT_COLOR
+    font_accent_color: str = GUIConstants.PRIMARY_COLOR
     font_base_color: str = GUIConstants.LABEL_FONT_COLOR
 
     def __post_init__(self):
@@ -1345,7 +1353,7 @@ class Button(BaseComponent):
     icon_name: str = None   # Optional icon to accompany the text
     icon_size: int = GUIConstants.ICON_INLINE_FONT_SIZE
     icon_color: str = GUIConstants.BUTTON_FONT_COLOR
-    selected_icon_color: str = "black"
+    selected_icon_color: str = GUIConstants.TEXT_ON_PRIMARY_COLOR
     icon_y_offset: int = 0
     is_icon_inline: bool = True    # True = render next to text; False = render centered above text
     right_icon_name: str = None    # Optional icon rendered right-justified
@@ -1353,7 +1361,7 @@ class Button(BaseComponent):
     right_icon_color: str = GUIConstants.BUTTON_FONT_COLOR
     text_y_offset: int = 0
     background_color: str = GUIConstants.BUTTON_BACKGROUND_COLOR
-    selected_color: str = GUIConstants.ACCENT_COLOR
+    selected_color: str = GUIConstants.BUTTON_SELECTED_COLOR
 
     # Cannot define these class attrs w/the get_*_font_*() methods because the attrs will
     # not be dynamically reinterpreted after initial class import.

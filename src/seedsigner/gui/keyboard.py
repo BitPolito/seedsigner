@@ -126,25 +126,25 @@ class Keyboard:
                     font = self.keyboard.icon_key_font
                     text_height = self.keyboard.icon_key_height
 
-            outline_color = "#333"
+            outline_color = GUIConstants.ACCENT_COLOR
             if not self.is_active:
                 rect_color = self.keyboard.deactivated_background_color
-                font_color = "#333"  # Show the letter but render as gray
-                outline_color = self.keyboard.deactivated_background_color
+                font_color = GUIConstants.INACTIVE_COLOR
+                outline_color = GUIConstants.SECONDARY_SURFACE_COLOR
 
                 if self.is_selected:
                     # Inactive, selected just gets highlighted outline
                     outline_color = self.keyboard.highlight_color
             elif self.is_selected:
                 rect_color = self.keyboard.highlight_color  # Render solid background with the UI's hero color
-                font_color = "black"
+                font_color = GUIConstants.TEXT_ON_PRIMARY_COLOR
             else:
                 if self.is_additional_key:
-                    rect_color = "#000"
-                    font_color = "#999"
+                    rect_color = GUIConstants.BACKGROUND_COLOR
+                    font_color = GUIConstants.PRIMARY_COLOR
                 else:
                     rect_color = self.keyboard.background_color
-                    font_color = "#e8e8e8"
+                    font_color = GUIConstants.PRIMARY_COLOR
 
             self.keyboard.draw.rounded_rectangle(
                 (
@@ -183,7 +183,7 @@ class Keyboard:
                  additional_keys=[KEY_BACKSPACE],
                  auto_wrap=[WRAP_TOP, WRAP_BOTTOM, WRAP_LEFT, WRAP_RIGHT],
                  render_now=True,
-                 highlight_color: str = GUIConstants.ACCENT_COLOR):
+                 highlight_color: str = GUIConstants.BUTTON_SELECTED_COLOR):
         """
             `auto_wrap` specifies which edges the keyboard is allowed to loop back when
             navigating past the end.
@@ -197,7 +197,7 @@ class Keyboard:
 
         self.auto_wrap = auto_wrap
         self.background_color = GUIConstants.BUTTON_BACKGROUND_COLOR
-        self.deactivated_background_color = GUIConstants.BACKGROUND_COLOR
+        self.deactivated_background_color = GUIConstants.SECONDARY_SURFACE_COLOR
         self.highlight_color = highlight_color
 
         # Does the specified layout work?
@@ -304,7 +304,11 @@ class Keyboard:
             Does NOT call self.renderer.show_image to avoid multiple calls on the same screen.
         """
         # Start with a clear screen
-        self.draw.rectangle(self.rect, outline=0, fill=0)
+        self.draw.rectangle(
+            self.rect,
+            outline=GUIConstants.BACKGROUND_COLOR,
+            fill=GUIConstants.BACKGROUND_COLOR,
+        )
 
         for i, row_keys in enumerate(self.keys):
             for j, key in enumerate(row_keys):
@@ -521,7 +525,7 @@ class TextEntryDisplay(TextEntryDisplayConstants):
     rect: Tuple[int,int,int,int]
     font_name: str = GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME
     font_size: int = 24
-    accent_color: str = GUIConstants.ACCENT_COLOR
+    accent_color: str = GUIConstants.PRIMARY_COLOR
     background_color: str = GUIConstants.BUTTON_BACKGROUND_COLOR
     cursor_mode: str = TextEntryDisplayConstants.CURSOR_MODE__BLOCK
     is_centered: bool = True
@@ -549,7 +553,11 @@ class TextEntryDisplay(TextEntryDisplayConstants):
             self.cur_text = cur_text
 
         # Start by rendering to a new Image that we'll composite in at the end
-        image = Image.new("RGB", (self.width + 1, self.height + 1), "black")
+        image = Image.new(
+            "RGB",
+            (self.width + 1, self.height + 1),
+            GUIConstants.BACKGROUND_COLOR,
+        )
         draw = ImageDraw.Draw(image)
 
         draw.rounded_rectangle((0, 0, self.width, self.height), fill=self.background_color, radius=4)
@@ -577,12 +585,12 @@ class TextEntryDisplay(TextEntryDisplayConstants):
                 cursor_block_offset -= end_pos_x - self.width + 1
                 self.text_offset -= end_pos_x - self.width + 1
             
-            draw.text((self.text_offset, self.height - int(text_height/2)), self.cur_text[:-1], fill=GUIConstants.ACCENT_COLOR, font=self.font, anchor="ls")
+            draw.text((self.text_offset, self.height - int(text_height/2)), self.cur_text[:-1], fill=self.accent_color, font=self.font, anchor="ls")
 
             # Draw the highlighted cursor block
-            cursor_color = "#666"
+            cursor_color = GUIConstants.ACCENT_COLOR
             draw.rectangle((cursor_block_offset, 1, cursor_block_offset + cursor_block_width, self.height - 1), fill=cursor_color)
-            draw.text((cursor_block_offset + 1, self.height - int(text_height/2)), self.cur_text[-1], fill=GUIConstants.ACCENT_COLOR, font=self.font, anchor="ls")
+            draw.text((cursor_block_offset + 1, self.height - int(text_height/2)), self.cur_text[-1], fill=GUIConstants.TEXT_ON_PRIMARY_COLOR, font=self.font, anchor="ls")
 
         else:
             cursor_bar_serif_half_width = 4
@@ -632,7 +640,7 @@ class TextEntryDisplay(TextEntryDisplayConstants):
             )
 
             # Render as an "I" bar
-            cursor_bar_color = "#ccc"
+            cursor_bar_color = GUIConstants.ACCENT_COLOR
             draw.line((cursor_bar_x, 3, cursor_bar_x, self.height - 3), fill=cursor_bar_color)
             draw.line((cursor_bar_x - cursor_bar_serif_half_width, 3, cursor_bar_x + cursor_bar_serif_half_width, 3), fill=cursor_bar_color)
             draw.line((cursor_bar_x - cursor_bar_serif_half_width, self.height - 3, cursor_bar_x + cursor_bar_serif_half_width, self.height - 3), fill=cursor_bar_color)
