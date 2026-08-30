@@ -1,104 +1,121 @@
 name: Build
 
 on:
-  pull_request:
-    # Build on changes to this workflow files in PRs to test proposed changes
-    paths:
-      - '.github/workflows/build.yml'
-  push:
-    branches:
-      - main
-      - dev
   workflow_dispatch:
     inputs:
-      os-ref:
-        description: The seedsigner-os ref (tag/branch/sha1) to use
-        default: main
+      expected_app_commit:
+        description: "Exact 40-character BitPolito commit selected for this candidate"
         required: true
+        type: string
+      confirm_pi0_build:
+        description: "Explicit confirmation"
+        required: true
+        type: choice
+        options:
+          - "DO NOT BUILD"
+          - "BUILD PI0 CANDIDATE"
 
-# Increment this number as part of a PR to trigger an image build for the PR
-# trigger = 0
+permissions:
+  contents: read
+
+env:
+  BITPOLITO_VERSION: "0.8.7-bitpolito.1"
+  BITPOLITO_APP_REPOSITORY: "https://github.com/BitPolito/seedsigner.git"
+  SEEDSIGNER_OS_COMMIT: "d13859392660fe512a753bc14ecd0edc86c35510"
+  DOCKER_DEFAULT_PLATFORM: "linux/amd64"
 
 jobs:
-  build:
-    name: build
+  authorize:
+    name: validate manual request
     runs-on: ubuntu-latest
-    # Prevent resource consuming cron triggered runs in forks
-    if: (!github.event.repository.fork || github.event_name == 'workflow_dispatch')
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [ "pi0", "pi2", "pi02w", "pi4" ]
+    timeout-minutes: 5
     steps:
-      - name: checkout seedsigner-os
+      - name: Validate manual approval inputs
+        env:
+          ACTUAL_APP_COMMIT: ${{ github.sha }}
+          EXPECTED_APP_COMMIT: ${{ inputs.expected_app_commit }}
+          BUILD_CONFIRMATION: ${{ inputs.confirm_pi0_build }}
+        run: |
+          test "${BUILD_CONFIRMATION}" = "BUILD PI0 CANDIDATE"
+          test "${EXPECTED_APP_COMMIT}" = "${ACTUAL_APP_COMMIT}"
+          printf '%s\n' "${EXPECTED_APP_COMMIT}" | grep -Eq '^[0-9a-f]{40}$'
+
+  quality:
+    needs: authorize
+    name: release quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Initialize official screenshot fixtures
+        run: git -c submodule.seedsigner-screenshots.update=checkout submodule update --init --recursive
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libzbar0
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r tests/requirements.txt -r l10n/requirements-l10n.txt -r tools/simulator/requirements-simulator.txt
+          pip install -e .
+      - name: Run release quality gate
+        env:
+          BITPOLITO_PYTHON: python
+          BITPOLITO_ARTIFACTS_DIR: artifacts/quality
+        run: ./scripts/run-quality-gate.sh --release
+      - name: Archive visual quality gate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitpolito-visual-quality-gate
+          path: artifacts/quality/**
+          if-no-files-found: warn
+          retention-days: 30
+
+  build:
+    needs: quality
+    name: pi0 candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    environment: bitpolito-image-build
+    steps:
+      - name: Checkout pinned SeedSigner OS
         uses: actions/checkout@v4
         with:
-          repository: "seedsigner/seedsigner-os"
-          # use the os-ref input parameter in case of workflow_dispatch or default to main in case of cron triggers
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.os-ref || 'main' }}
-          submodules: true
-          path: "seedsigner-os"
-          # get full history + tags for "git describe"
+          repository: "SeedSigner/seedsigner-os"
+          ref: ${{ env.SEEDSIGNER_OS_COMMIT }}
+          submodules: recursive
+          path: seedsigner-os
           fetch-depth: 0
 
-      - name: checkout source
-        uses: actions/checkout@v4
-        with:
-          # ref defaults to repo default-branch=dev (cron) or SHA of event (workflow_dispatch)
-          path: "seedsigner-os/opt/rootfs-overlay/opt"
-          # get full history + tags for "git describe"
-          fetch-depth: 0
-
-      - name: Get and set meta data
+      - name: Pin build metadata
         run: |
-          # The builder_hash (seedsigner-os hash) for the cache action step key
-          echo "builder_hash=$(git -C seedsigner-os rev-parse --short HEAD)"| tee -a $GITHUB_ENV
+          echo "builder_hash=$(git -C seedsigner-os rev-parse --short HEAD)" >> "${GITHUB_ENV}"
+          echo "app_commit=${GITHUB_SHA}" >> "${GITHUB_ENV}"
+          echo "os_commit=$(git -C seedsigner-os rev-parse HEAD)" >> "${GITHUB_ENV}"
+          echo "buildroot_commit=$(git -C seedsigner-os/opt/buildroot rev-parse HEAD)" >> "${GITHUB_ENV}"
 
-          # Derive tag based versions, like 0.7.0-40-g0424967 (=$tag-$number-of-commits-since-tag-$short-sha1),
-          # or just e.g. 0.7.0, if we are exactly on a 0.7.0 tagged commit.
-          # --always to fall back to commit sha, if no tag present like in partial forks of the repo
-          os_version="$(git -C seedsigner-os describe --tags --always)"
-          source_version="$(git -C seedsigner-os/opt/rootfs-overlay/opt describe --tags --always)"
-
-          # Combine seedsigner and seedsigner-os version into one version string and squash the versions, if
-          # they are identical: So os_version=0.7.0 + source_version=0.7.0 combine to just only "0.7.0",
-          # whereas os_version=0.6.0-61-g9fafebe + source_version=0.7.0-40-g0424967 combine to "os0.6.0-61-g9fafebe_sw0.7.0-40-g0424967"
-          if [ "${os_version}" = "${source_version}" ]; then
-            # seedsigner + seedsigner_os have the same tag
-            echo "img_version=${source_version}"| tee -a $GITHUB_ENV
-          else
-            echo "img_version=os${os_version}_sw${source_version}"| tee -a $GITHUB_ENV
-          fi
-
-      - name: delete unnecessary files
-        run: |
-          cd seedsigner-os/opt/rootfs-overlay/opt
-          find . -mindepth 1 -maxdepth 1 ! -name src -exec rm -rf {} +
-          ls -la .
-          ls -la src
-
-      - name: restore build cache
+      - name: Restore official build caches
         uses: actions/cache@v4
-        # Caching reduces the build time to ~50% (currently: ~30 mins instead of ~1 hour,
-        # while consuming ~850 MB storage space).
         with:
           path: |
             ~/.buildroot-ccache/
             seedsigner-os/buildroot_dl
-          key: build-cache-${{ matrix.target }}-${{ env.builder_hash }}
+          key: build-cache-pi0-${{ env.builder_hash }}
           restore-keys: |
-            build-cache-${{ matrix.target }}-
+            build-cache-pi0-
 
-      - name: Create build container
-        run: |
-          cd seedsigner-os
-          docker build -t seedsigner-os-build .
+      - name: Create official build container
+        run: docker build --platform linux/amd64 -t seedsigner-os-build seedsigner-os
 
-      - name: build
+      - name: Build Pi Zero image through the official application path
         run: |
-          mkdir -p \
-            ~/.buildroot-ccache \
-            seedsigner-os/buildroot_dl
+          mkdir -p ~/.buildroot-ccache seedsigner-os/buildroot_dl seedsigner-os/images
           docker run \
             --rm \
             -v "$(pwd)/seedsigner-os/opt:/opt" \
@@ -106,68 +123,40 @@ jobs:
             -v "$(pwd)/seedsigner-os/buildroot_dl:/buildroot_dl" \
             -v "${HOME}/.buildroot-ccache:/root/.buildroot-ccache" \
             seedsigner-os-build \
-            --${{ matrix.target }} --skip-repo --no-clean
-          sudo chown -R $USER:$USER seedsigner-os/images seedsigner-os/buildroot_dl ~/.buildroot-ccache/
+            --pi0 \
+            --app-repo="${BITPOLITO_APP_REPOSITORY}" \
+            --app-commit-id="${app_commit}" \
+            --no-clean
 
-      - name: list image (before rename)
+      - name: Name and verify candidate
         run: |
-          ls -la seedsigner-os/images
+          source_image="seedsigner-os/images/seedsigner_os.${app_commit}.pi0.img"
+          final_image="seedsigner-os/images/seedsigner_os.${BITPOLITO_VERSION}.pi0.img"
+          test -f "${source_image}"
+          mv "${source_image}" "${final_image}"
+          (
+            cd seedsigner-os/images
+            sha256sum "seedsigner_os.${BITPOLITO_VERSION}.pi0.img" > "seedsigner_os.${BITPOLITO_VERSION}.pi0.sha256"
+          )
+          image_sha256="$(sha256sum "${final_image}" | awk '{print $1}')"
+          {
+            echo "image=seedsigner_os.${BITPOLITO_VERSION}.pi0.img"
+            echo "application_commit=${app_commit}"
+            echo "os_commit=${os_commit}"
+            echo "buildroot_commit=${buildroot_commit}"
+            echo "sha256=${image_sha256}"
+          } > "seedsigner-os/images/seedsigner_os.${BITPOLITO_VERSION}.pi0.manifest.txt"
+          test "${os_commit}" = "${SEEDSIGNER_OS_COMMIT}"
+          test "${image_sha256}" = "$(sha256sum "${final_image}" | awk '{print $1}')"
+          cat "seedsigner-os/images/seedsigner_os.${BITPOLITO_VERSION}.pi0.manifest.txt"
 
-      - name: rename image
-        run: |
-          cd seedsigner-os/images
-          mv seedsigner_os*.img seedsigner_os.${{ env.img_version }}.${{ matrix.target }}.img
-
-      - name: print sha256sum
-        run: |
-          cd seedsigner-os/images
-          sha256sum *.img
-
-      - name: list image (after rename)
-        run: |
-          ls -la seedsigner-os/images
-
-      - name: upload images
+      - name: Upload unsigned candidate
         uses: actions/upload-artifact@v4
         with:
-          name: seedsigner_os_images-${{ matrix.target }}
-          path: "seedsigner-os/images/*.img"
+          name: seedsigner-os-${{ env.BITPOLITO_VERSION }}-pi0
+          path: |
+            seedsigner-os/images/seedsigner_os.*.pi0.img
+            seedsigner-os/images/seedsigner_os.*.pi0.manifest.txt
+            seedsigner-os/images/seedsigner_os.*.pi0.sha256
           if-no-files-found: error
-          # maximum 90 days retention
-          retention-days: 90
-
-  sha256sum:
-    name: calculate sha256sum
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: download images
-        uses: actions/download-artifact@v4
-        with:
-          path: images
-
-      - name: list images
-        run: |
-          ls -lRa images
-
-      - name: get seedsigner latest commit hash
-        id: get-seedsigner-hash
-        run: |
-          git init
-          echo "source_hash=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
-
-      - name: write sha256sum
-        run: |
-          cd images
-          # each downloaded image is in its own subfolder
-          find . -name "*.img" -exec mv {} . \;
-          sha256sum *.img > seedsigner_os.${{ env.source_hash }}.sha256
-
-      - name: upload checksums
-        uses: actions/upload-artifact@v4
-        with:
-          name: seedsigner_os_images_sha256
-          path: "images/*.sha256"
-          if-no-files-found: error
-          # maximum 90 days retention
           retention-days: 90

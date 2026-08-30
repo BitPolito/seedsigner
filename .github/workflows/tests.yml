@@ -27,6 +27,9 @@ jobs:
         with:
           # Needs to also pull the seedsigner-translations repo
           submodules: recursive
+          fetch-depth: 0
+      - name: Initialize official screenshot fixtures
+        run: git -c submodule.seedsigner-screenshots.update=checkout submodule update --init --recursive
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -35,30 +38,69 @@ jobs:
         run: |
           sudo apt-get install libzbar0
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r tests/requirements.txt -r l10n/requirements-l10n.txt
+          pip install -r requirements.txt -r tests/requirements.txt -r l10n/requirements-l10n.txt -r tools/simulator/requirements-simulator.txt
           pip install -e .
       - name: Compile translations
         run: python setup.py compile_catalog
+      - name: Compile Python sources
+        run: python -m compileall -q -x 'seedsigner-translations' src tools/simulator tests
+
+      - name: Verify BitPolito customization scope
+        run: ./scripts/check_upstream_scope.sh
+      - name: Validate Git diff
+        run: git diff --check
       - name: Test with pytest
         run: |
           mkdir artifacts
           python -m pytest \
+            --ignore=tests/bitpolito_visual_checks.py \
+            --ignore=tests/test_simulator.py \
             --color=yes \
             --cov=seedsigner \
             --cov-append \
             --cov-branch \
             --durations 5 \
             -vv
+      - name: Run BitPolito visual checks
+        run: |
+          python -m pytest tests/bitpolito_visual_checks.py \
+            --color=yes \
+            --cov=seedsigner \
+            --cov-append \
+            --cov-branch \
+            -vv
+      - name: Test simulator adapters
+        run: |
+          python -m pytest tests/test_simulator.py \
+            --color=yes \
+            --cov=seedsigner \
+            --cov-append \
+            --cov-branch \
+            -vv
+      - name: Run desktop simulator smoke tests
+        run: |
+          python tools/simulator/run_simulator.py --headless-smoke --display-config st7789_240x240 --screenshot artifacts/simulator-smoke-240.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow settings --display-config st7789_240x240 --screenshot artifacts/simulator-settings-240.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow scan --smoke-timeout 20 --camera-image tests/fixtures/bitpolito-settings-qr.png --display-config st7789_240x240 --screenshot artifacts/simulator-scan-240.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow screensaver --display-config st7789_240x240
+          python tools/simulator/run_simulator.py --headless-smoke --display-config st7789_320x240 --screenshot artifacts/simulator-smoke-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow settings --display-config st7789_320x240 --screenshot artifacts/simulator-settings-st7789-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow scan --smoke-timeout 20 --camera-image tests/fixtures/bitpolito-settings-qr.png --display-config st7789_320x240 --screenshot artifacts/simulator-scan-st7789-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow screensaver --display-config st7789_320x240
+          python tools/simulator/run_simulator.py --headless-smoke --display-config ili9341_320x240 --screenshot artifacts/simulator-smoke-ili9341-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow settings --display-config ili9341_320x240 --screenshot artifacts/simulator-settings-ili9341-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow scan --smoke-timeout 20 --camera-image tests/fixtures/bitpolito-settings-qr.png --display-config ili9341_320x240 --screenshot artifacts/simulator-scan-ili9341-320.png
+          python tools/simulator/run_simulator.py --headless-smoke --smoke-flow screensaver --display-config ili9341_320x240
       - name: Generate screenshots
         run: |
           python -m pytest tests/screenshot_generator/generator.py \
+            --screenshot-output ./artifacts/screenshots \
             --color=yes \
             --cov=seedsigner \
             --cov-append \
             --cov-branch \
             --cov-report html:./artifacts/cov_html \
             -vv
-          cp -r ./seedsigner-screenshots ./artifacts/
       - name: Coverage report
         run: coverage report
       - name: Archive CI Artifacts

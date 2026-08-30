@@ -9,3 +9,11 @@ src/seedsigner/models/settings_definition.json
 
 *.po
 *.mo
+.venv-simulator/
+.venv-simulator.broken-*/
+.simulator-runtime/
+.build/
+artifacts/
+
+.pytest_cache/
+coverage_html_report/
