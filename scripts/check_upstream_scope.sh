@@ -10,7 +10,6 @@ cd "${repo_root}"
 # Official SeedSigner 0.8.7 application commit. This is a read-only comparison
 # point: the script never fetches from or writes to the upstream repository.
 BASE_COMMIT="${SEEDSIGNER_APP_BASE_COMMIT}"
-EXPECTED_CONTROLLER_DIFF_SHA256="127d24daf15d82e54224bf4a4a9688d32c220f38b4234932099483c927fa1b9b"
 
 if ! git cat-file -e "${BASE_COMMIT}^{commit}" 2>/dev/null; then
     echo "Missing official SeedSigner 0.8.7 base commit: ${BASE_COMMIT}" >&2
@@ -37,18 +36,33 @@ for protected_path in ${PROTECTED_PATHS}; do
     fi
 done
 
-controller_diff_sha256="$(
-    git diff "${BASE_COMMIT}" -- src/seedsigner/controller.py |
-        sha256sum |
-        cut -d " " -f 1
-)"
-if [ "${controller_diff_sha256}" != "${EXPECTED_CONTROLLER_DIFF_SHA256}" ]; then
+list_file="$(mktemp)"
+controller_changes_file="$(mktemp)"
+expected_controller_changes_file="$(mktemp)"
+cleanup() {
+    rm -f "${list_file}" "${controller_changes_file}" "${expected_controller_changes_file}"
+}
+trap 'cleanup' EXIT HUP INT TERM
+
+# Compare the actual changed lines instead of hashing the complete diff output.
+# Git versions and local diff settings can format hunk headers differently on
+# the developer machine and on GitHub Actions, while the allowed source change
+# itself remains identical.
+git diff --unified=0 "${BASE_COMMIT}" -- src/seedsigner/controller.py |
+    awk '/^@@/ { in_hunk = 1; next } in_hunk && /^[+-][^-+]/ { print }' |
+    sed 's/[[:space:]]*$//' |
+    sort > "${controller_changes_file}"
+{
+    printf '%s\n' "+_SCREENSAVER_ACTIVATION_MS = 30 * 1000"
+    printf '%s\n' '-    VERSION = "0.8.7"'
+    printf '%s\n' "+    VERSION = \"${BITPOLITO_VERSION}\""
+    printf '%s\n' '-        controller.screensaver_activation_ms = 2 * 60 * 1000  # two minutes'
+    printf '%s\n' '+        controller.screensaver_activation_ms = _SCREENSAVER_ACTIVATION_MS'
+} | sort > "${expected_controller_changes_file}"
+if ! diff -u "${expected_controller_changes_file}" "${controller_changes_file}"; then
     echo "controller.py contains changes beyond version and 30-second timeout" >&2
     exit 1
 fi
-
-list_file="$(mktemp)"
-trap 'rm -f "${list_file}"' EXIT HUP INT TERM
 
 {
     git diff --name-only "${BASE_COMMIT}" --
