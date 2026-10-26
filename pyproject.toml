@@ -14,7 +14,7 @@ description = "BitPolito visual customization of SeedSigner 0.8.7"
 name = "seedsigner"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.8.7+bitpolito.1"
+version = "0.8.7+bitpolito.2"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/BitPolito/seedsigner/issues"
@@ -23,7 +23,7 @@ Repository = "https://github.com/BitPolito/seedsigner"
 Upstream = "https://github.com/SeedSigner/seedsigner"
 
 [tool.coverage.html]
-directory = "coverage_html_report"
+directory = "artifacts/coverage/html"
 skip_covered = true
 skip_empty = true
 

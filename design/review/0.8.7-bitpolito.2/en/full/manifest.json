@@ -7,9 +7,10 @@
   },
   "categories": {
     "main_menu_views": {
-      "count": 17,
+      "count": 18,
       "sheet": "01-main_menu_views.png",
       "screens": [
+        "LoadingScreen_bitsymbol.png",
         "MainMenuView.png",
         "MainMenuView_DefaultToast.png",
         "MainMenuView_DireWarningToast.png",

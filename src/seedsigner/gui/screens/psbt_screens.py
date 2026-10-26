@@ -534,8 +534,8 @@ class PSBTMathScreen(ButtonListScreen):
         cur_y = 0
 
         def render_amount(cur_y, amount_str, info_text, info_text_color=GUIConstants.BODY_FONT_COLOR):
-            secondary_digit_color = GUIConstants.ACCENT_COLOR
-            tertiary_digit_color = GUIConstants.ACCENT_COLOR
+            secondary_digit_color = GUIConstants.SECONDARY_TEXT_COLOR
+            tertiary_digit_color = GUIConstants.SECONDARY_TEXT_COLOR
             digit_group_spacing = 2 * ssf
             # secondary_digit_color = GUIConstants.BODY_FONT_COLOR
             # tertiary_digit_color = GUIConstants.BODY_FONT_COLOR

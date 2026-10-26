@@ -13,12 +13,25 @@ from seedsigner.views.view import View
 logger = logging.getLogger(__name__)
 
 
+def _on_theme_background(image):
+    """Blend a white-backed brand asset into the GUI background when rendered."""
+    from PIL import Image, ImageChops
+
+    red, green, blue = image.split()
+    white = ImageChops.darker(ImageChops.darker(red, green), blue)
+    white = Image.merge("RGB", (white, white, white))
+    adjustment = ImageChops.invert(
+        Image.new("RGB", image.size, GUIConstants.BACKGROUND_COLOR)
+    )
+    return ImageChops.subtract(image, ImageChops.multiply(white, adjustment))
+
+
 
 # TODO: This early code is now outdated vis-a-vis Screen vs View distinctions
 class LogoScreen(BaseScreen):
     def __init__(self):
         super().__init__()
-        self.logo = load_image("bitpolito_splash.png")
+        self.logo = _on_theme_background(load_image("bitpolito_splash.png"))
 
         self.partners = [
             "bitpolito",
@@ -27,7 +40,7 @@ class LogoScreen(BaseScreen):
         self.partner_logos: dict = {}
         for partner in self.partners:
             logo_url = os.path.join("partners", f"{partner}_logo.png")
-            self.partner_logos[partner] = load_image(logo_url)
+            self.partner_logos[partner] = _on_theme_background(load_image(logo_url))
 
 
     def _run(self):

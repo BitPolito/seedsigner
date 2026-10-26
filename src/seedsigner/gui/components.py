@@ -29,17 +29,20 @@ class GUIConstants:
 
     # BitPolito theme tokens. Keep these internal to the GUI layer so the application
     # behavior and public interfaces remain identical to upstream SeedSigner.
-    BACKGROUND_COLOR = "#FFFFFF"
+    BACKGROUND_COLOR = "#F9F9F9"
     PRIMARY_COLOR = "#001CE0"
+    # Pale blues support secondary surfaces; primary blue identifies selection.
+    SECONDARY_COLOR = "#A7B2FF"
+    CONTROL_SURFACE_COLOR = "#E8ECFF"
     ACCENT_COLOR = "#6666FF"
-    TEXT_ON_PRIMARY_COLOR = "#FFFFFF"
+    TEXT_ON_PRIMARY_COLOR = BACKGROUND_COLOR
     SECONDARY_SURFACE_COLOR = "#F3F5FF"
-    INACTIVE_COLOR = "#667085"
-    WARNING_COLOR = "#8A5A00"
-    DIRE_WARNING_COLOR = "#B42318"
-    ERROR_COLOR = "#B42318"
-    SUCCESS_COLOR = "#087A45"
-    INFO_COLOR = "#005FCC"
+    INACTIVE_COLOR = ACCENT_COLOR
+    WARNING_COLOR = "#956437"
+    DIRE_WARNING_COLOR = "#A95360"
+    ERROR_COLOR = "#A95360"
+    SUCCESS_COLOR = "#4F765E"
+    INFO_COLOR = PRIMARY_COLOR
     # Secondary text is blue for readable metadata and labels on light surfaces.
     SECONDARY_TEXT_COLOR = INFO_COLOR
     # BITCOIN_ORANGE = "#FF9416"  # not used
@@ -110,7 +113,7 @@ class GUIConstants:
         SettingsConstants.LOCALE__CHINESE_SIMPLIFIED: 20,
     }
     BUTTON_FONT_COLOR = PRIMARY_COLOR
-    BUTTON_BACKGROUND_COLOR = SECONDARY_SURFACE_COLOR
+    BUTTON_BACKGROUND_COLOR = CONTROL_SURFACE_COLOR
     BUTTON_SELECTED_COLOR = PRIMARY_COLOR
     BUTTON_HEIGHT = 32
     BUTTON_SELECTED_FONT_COLOR = TEXT_ON_PRIMARY_COLOR
@@ -1353,7 +1356,7 @@ class Button(BaseComponent):
     icon_name: str = None   # Optional icon to accompany the text
     icon_size: int = GUIConstants.ICON_INLINE_FONT_SIZE
     icon_color: str = GUIConstants.BUTTON_FONT_COLOR
-    selected_icon_color: str = GUIConstants.TEXT_ON_PRIMARY_COLOR
+    selected_icon_color: str = GUIConstants.BUTTON_SELECTED_FONT_COLOR
     icon_y_offset: int = 0
     is_icon_inline: bool = True    # True = render next to text; False = render centered above text
     right_icon_name: str = None    # Optional icon rendered right-justified

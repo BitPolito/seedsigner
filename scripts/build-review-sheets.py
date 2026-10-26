@@ -12,6 +12,8 @@ from textwrap import shorten
 from PIL import Image, ImageDraw, ImageFont
 
 
+ROOT = Path(__file__).resolve().parents[1]
+THEME = json.loads((ROOT / "design/bitpolito-theme.json").read_text())
 CATEGORIES = (
     "main_menu_views",
     "settings_views",
@@ -25,13 +27,13 @@ TILE_HEIGHT = 292
 IMAGE_SIZE = (240, 240)
 COLUMNS = 4
 TITLE_HEIGHT = 46
-BACKGROUND = (255, 255, 255)
-TEXT = (0, 28, 224)
+BACKGROUND = THEME["colors"]["background"]
+TEXT = THEME["colors"]["primary"]
 
 
 def font(size: int):
     candidates = (
-        Path("src/seedsigner/resources/fonts/OpenSans-Regular.ttf"),
+        ROOT / "src/seedsigner/resources/fonts/OpenSans-Regular.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
     )
     for candidate in candidates:
@@ -62,7 +64,7 @@ def build_sheet(category: str, paths: list[Path], output: Path) -> None:
         label = shorten(path.stem, width=39, placeholder="...")
         bbox = draw.textbbox((0, 0), label, font=font(13))
         label_x = column * TILE_WIDTH + (TILE_WIDTH - (bbox[2] - bbox[0])) // 2
-        draw.text((label_x, y + IMAGE_SIZE[1] + 9), label, fill=(45, 55, 75), font=font(13))
+        draw.text((label_x, y + IMAGE_SIZE[1] + 9), label, fill=TEXT, font=font(13))
 
     output.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(output, format="PNG", optimize=True)
@@ -74,7 +76,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("design/review/0.8.7-bitpolito.1/en/full"),
+        default=ROOT / "design/review" / THEME["release"] / "en/full",
+        help="Output directory (default: current theme release review)",
     )
     args = parser.parse_args()
 

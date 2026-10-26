@@ -1,7 +1,9 @@
 {
   "schema_version": 1,
   "project": "BitPolito SeedSigner",
-  "release": "0.8.7-bitpolito.1",
+  "release": "0.8.7-bitpolito.2",
+  "legacy_theme_commit": "7ae94fd1005724a971ae897777eb6fa741f3d55d",
+  "legacy_theme_tag": "bitpolito_v1",
   "upstream": {
     "application_commit": "e0a80d4b33b8eb7fb1e9fd14a27b7cd11c7d2cd6",
     "os_commit": "d13859392660fe512a753bc14ecd0edc86c35510"
@@ -10,16 +12,28 @@
     "screensaver_timeout_seconds": 30
   },
   "colors": {
-    "background": "#FFFFFF",
+    "background": "#F9F9F9",
     "primary": "#001CE0",
+    "secondary": "#A7B2FF",
+    "control_surface": "#E8ECFF",
     "accent": "#6666FF",
-    "text_on_primary": "#FFFFFF",
+    "text_on_primary": "#F9F9F9",
     "secondary_surface": "#F3F5FF",
-    "inactive": "#667085",
-    "warning": "#8A5A00",
-    "error": "#B42318",
-    "success": "#087A45",
-    "info": "#005FCC"
+    "inactive": "#6666FF",
+    "warning": "#956437",
+    "error": "#A95360",
+    "success": "#4F765E",
+    "info": "#001CE0"
+  },
+  "icons": {
+    "bitcoin": {
+      "source_path": "design/source-assets/bitsymbol.svg",
+      "source_sha256": "e9bde617b045e66aacc1232f42eeff842330d78d26ec19677b4fb4cfd54b47da",
+      "font_path": "src/seedsigner/resources/fonts/seedsigner-icons.otf",
+      "font_sha256": "ab5acfb8d74bc85715669855fe6d70120ea3e5daf230df50a4bc0bf5d1ac1554",
+      "codepoint": "U+E91D",
+      "generator": "scripts/build-brand-icons.py"
+    }
   },
   "assets": {
     "splash": {

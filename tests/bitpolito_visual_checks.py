@@ -17,10 +17,10 @@ sys.modules["RPi.GPIO"] = MagicMock()
 
 from seedsigner import controller as controller_module
 from seedsigner.controller import Controller
-from seedsigner.gui.components import GUIConstants, load_image
-from seedsigner.gui.keyboard import Keyboard
+from seedsigner.gui.components import BtcAmount, GUIConstants, load_image
+from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
 from seedsigner.gui.renderer import Renderer
-from seedsigner.gui.screens.screen import ButtonListScreen, ButtonOption
+from seedsigner.gui.screens.screen import ButtonListScreen, ButtonOption, LoadingScreenThread
 from seedsigner.hardware.buttons import HardwareButtons
 from seedsigner.models.encode_qr import SeedQrEncoder
 from seedsigner.models.settings import Settings
@@ -117,21 +117,29 @@ def contrast_ratio(foreground, background):
 
 
 def test_theme_tokens_and_normal_text_contrast():
-    assert GUIConstants.BACKGROUND_COLOR == "#FFFFFF"
+    assert GUIConstants.BACKGROUND_COLOR == "#F9F9F9"
     assert GUIConstants.PRIMARY_COLOR == "#001CE0"
+    assert GUIConstants.SECONDARY_COLOR == "#A7B2FF"
+    assert GUIConstants.CONTROL_SURFACE_COLOR == "#E8ECFF"
+    assert GUIConstants.BUTTON_BACKGROUND_COLOR == GUIConstants.CONTROL_SURFACE_COLOR
+    assert GUIConstants.BUTTON_SELECTED_COLOR == GUIConstants.PRIMARY_COLOR
+    assert GUIConstants.BUTTON_SELECTED_FONT_COLOR == GUIConstants.TEXT_ON_PRIMARY_COLOR
     assert GUIConstants.ACCENT_COLOR == "#6666FF"
     assert GUIConstants.SECONDARY_SURFACE_COLOR == "#F3F5FF"
-    assert GUIConstants.INACTIVE_COLOR == "#667085"
-    assert GUIConstants.WARNING_COLOR == "#8A5A00"
-    assert GUIConstants.ERROR_COLOR == "#B42318"
-    assert GUIConstants.SUCCESS_COLOR == "#087A45"
-    assert GUIConstants.INFO_COLOR == "#005FCC"
+    assert GUIConstants.TEXT_ON_PRIMARY_COLOR == GUIConstants.BACKGROUND_COLOR
+    assert GUIConstants.INACTIVE_COLOR == GUIConstants.ACCENT_COLOR
+    assert GUIConstants.WARNING_COLOR == "#956437"
+    assert GUIConstants.ERROR_COLOR == "#A95360"
+    assert GUIConstants.SUCCESS_COLOR == "#4F765E"
+    assert GUIConstants.INFO_COLOR == GUIConstants.PRIMARY_COLOR
     assert GUIConstants.SECONDARY_TEXT_COLOR == GUIConstants.INFO_COLOR
     assert GUIConstants.LABEL_FONT_COLOR == GUIConstants.SECONDARY_TEXT_COLOR
 
     manifest_tokens = {
         "background": GUIConstants.BACKGROUND_COLOR,
         "primary": GUIConstants.PRIMARY_COLOR,
+        "secondary": GUIConstants.SECONDARY_COLOR,
+        "control_surface": GUIConstants.CONTROL_SURFACE_COLOR,
         "accent": GUIConstants.ACCENT_COLOR,
         "text_on_primary": GUIConstants.TEXT_ON_PRIMARY_COLOR,
         "secondary_surface": GUIConstants.SECONDARY_SURFACE_COLOR,
@@ -146,9 +154,10 @@ def test_theme_tokens_and_normal_text_contrast():
     text_pairs = [
         (GUIConstants.PRIMARY_COLOR, GUIConstants.BACKGROUND_COLOR),
         (GUIConstants.PRIMARY_COLOR, GUIConstants.SECONDARY_SURFACE_COLOR),
-        (GUIConstants.INACTIVE_COLOR, GUIConstants.BACKGROUND_COLOR),
-        (GUIConstants.INACTIVE_COLOR, GUIConstants.SECONDARY_SURFACE_COLOR),
         (GUIConstants.TEXT_ON_PRIMARY_COLOR, GUIConstants.PRIMARY_COLOR),
+        (GUIConstants.BUTTON_SELECTED_FONT_COLOR, GUIConstants.BUTTON_SELECTED_COLOR),
+        (GUIConstants.BUTTON_FONT_COLOR, GUIConstants.BUTTON_BACKGROUND_COLOR),
+        (GUIConstants.PRIMARY_COLOR, GUIConstants.SECONDARY_COLOR),
         (GUIConstants.WARNING_COLOR, GUIConstants.BACKGROUND_COLOR),
         (GUIConstants.ERROR_COLOR, GUIConstants.BACKGROUND_COLOR),
         (GUIConstants.SUCCESS_COLOR, GUIConstants.BACKGROUND_COLOR),
@@ -158,6 +167,9 @@ def test_theme_tokens_and_normal_text_contrast():
     ]
     for foreground, background in text_pairs:
         assert contrast_ratio(foreground, background) >= 4.5
+
+    # Disabled controls are not normal body text; retain a distinct muted blue.
+    assert contrast_ratio(GUIConstants.INACTIVE_COLOR, GUIConstants.SECONDARY_SURFACE_COLOR) >= 3
 
 
 def test_runtime_assets_and_rgb_contract():
@@ -229,6 +241,77 @@ def test_keyboard_states_use_theme_tokens():
     assert canvas.getpixel((disabled_key.screen_x + 8, disabled_key.screen_y + 5)) == ImageColor.getrgb(GUIConstants.SECONDARY_SURFACE_COLOR)
 
 
+def test_text_entry_cursor_uses_selected_control_contrast():
+    renderer = FakeRenderer()
+    with patched_gui(renderer):
+        entry = TextEntryDisplay(canvas=renderer.canvas, rect=(0, 0, 240, 40), cur_text="test")
+        entry.render()
+    colors = set(renderer.canvas.getdata())
+    assert ImageColor.getrgb(GUIConstants.BACKGROUND_COLOR) in colors
+    assert ImageColor.getrgb(GUIConstants.PRIMARY_COLOR) in colors
+    assert ImageColor.getrgb(GUIConstants.TEXT_ON_PRIMARY_COLOR) in colors
+
+
+def test_loading_animation_renders_the_shared_bitcoin_glyph():
+    renderer = FakeRenderer()
+    with patched_gui(renderer):
+        loading = LoadingScreenThread()
+        loading.stop()
+        loading.run()
+    center = renderer.canvas.crop((90, 90, 150, 150))
+    assert ImageColor.getrgb(GUIConstants.PRIMARY_COLOR) in set(center.getdata())
+    assert 'load_image("btc_logo_60x60.png")' not in (
+        REPO_ROOT / "src/seedsigner/gui/screens/screen.py"
+    ).read_text()
+
+
+def test_bitcoin_symbol_keeps_network_colors_and_amount_layouts():
+    modes = (
+        SettingsConstants.BTC_DENOMINATION__BTC,
+        SettingsConstants.BTC_DENOMINATION__SATS,
+        SettingsConstants.BTC_DENOMINATION__THRESHOLD,
+        SettingsConstants.BTC_DENOMINATION__BTCSATSHYBRID,
+    )
+    networks = (
+        (SettingsConstants.MAINNET, GUIConstants.ACCENT_COLOR),
+        (SettingsConstants.TESTNET, GUIConstants.TESTNET_COLOR),
+        (SettingsConstants.REGTEST, GUIConstants.REGTEST_COLOR),
+    )
+    for width in (240, 320):
+        for network, color in networks:
+            for mode in modes:
+                renderer = FakeRenderer(width=width)
+                settings = FakeSettings()
+                default_get_value = settings.get_value
+                values = {
+                    SettingsConstants.SETTING__NETWORK: network,
+                    SettingsConstants.SETTING__BTC_DENOMINATION: mode,
+                }
+                settings.get_value = lambda name, values=values: (
+                    values[name] if name in values else default_get_value(name)
+                )
+                with patched_gui(renderer):
+                    with patch.object(Settings, "get_instance", return_value=settings):
+                        amount = BtcAmount(total_sats=512345678, screen_y=10)
+                assert 0 < amount.paste_image.width <= width
+                icon_area = amount.paste_image.crop((0, 0, amount.icon_size, amount.icon_size))
+                assert ImageColor.getrgb(color) in set(icon_area.getdata())
+
+
+def test_seed_word_number_badges_keep_white_text_on_blue():
+    from seedsigner.gui.screens.seed_screens import SeedWordsScreen
+
+    renderer = FakeRenderer()
+    with patched_gui(renderer):
+        screen = SeedWordsScreen(
+            words=["abandon", "ability", "able", "about"],
+            button_data=[ButtonOption("Next")],
+        )
+    colors = set(screen.body_img.getdata())
+    assert ImageColor.getrgb(GUIConstants.PRIMARY_COLOR) in colors
+    assert ImageColor.getrgb(GUIConstants.TEXT_ON_PRIMARY_COLOR) in colors
+
+
 def render_splash(width, show_partner_logos, height=240):
     renderer = FakeRenderer(width=width, height=height)
     partner_value = (
@@ -256,6 +339,9 @@ def test_splash_renders_brand_version_and_partner_toggle_on_supported_widths():
         assert with_partner.size == (width, height)
         assert without_partner.getbbox() == (0, 0, width, height)
         assert with_partner.getbbox() == (0, 0, width, height)
+        background = ImageColor.getrgb(GUIConstants.BACKGROUND_COLOR)
+        assert without_partner.getpixel(((width - 240) // 2, 0)) == background
+        assert with_partner.getpixel(((width - 200) // 2, height - 9)) == background
         assert without_partner.tobytes() != with_partner.tobytes()
 
         primary = ImageColor.getrgb(GUIConstants.PRIMARY_COLOR)
@@ -311,7 +397,7 @@ def test_button_list_construction_has_no_overflow_on_supported_canvases():
 def test_timeout_version_and_qr_remain_fixed():
     assert controller_module._SCREENSAVER_ACTIVATION_MS == 30_000
     assert THEME_MANIFEST["behavior"]["screensaver_timeout_seconds"] == 30
-    assert Controller.VERSION == "0.8.7-bitpolito.1"
+    assert Controller.VERSION == "0.8.7-bitpolito.2"
 
     mnemonic = (
         "forum undo fragile fade shy sign arrest garment culture tube off merit"
@@ -395,8 +481,8 @@ def test_psbt_rendering_uses_light_theme_tokens():
 
     assert "association_line_color = GUIConstants.ACCENT_COLOR" in psbt_source
     assert "reset_color = GUIConstants.ACCENT_COLOR" in psbt_source
-    assert "secondary_digit_color = GUIConstants.ACCENT_COLOR" in psbt_source
-    assert "tertiary_digit_color = GUIConstants.ACCENT_COLOR" in psbt_source
+    assert "secondary_digit_color = GUIConstants.SECONDARY_TEXT_COLOR" in psbt_source
+    assert "tertiary_digit_color = GUIConstants.SECONDARY_TEXT_COLOR" in psbt_source
 
 
 def test_ci_workflows_keep_build_manual_and_cover_official_hardware_matrix():
@@ -433,7 +519,7 @@ def test_ci_workflows_keep_build_manual_and_cover_official_hardware_matrix():
     assert "git diff --check" in test_workflow
     assert "./scripts/check_upstream_scope.sh" in test_workflow
 
-    assert 'BITPOLITO_VERSION="0.8.7-bitpolito.1"' in release_metadata
+    assert 'BITPOLITO_VERSION="0.8.7-bitpolito.2"' in release_metadata
     assert (
         'SEEDSIGNER_OS_COMMIT="d13859392660fe512a753bc14ecd0edc86c35510"'
         in release_metadata

@@ -10,7 +10,7 @@ from typing import Any, List, Tuple
 from seedsigner.helpers.l10n import mark_for_translation as _mft
 from seedsigner.gui.components import (GUIConstants,
     BaseComponent, Button, Icon, IconButton, LargeIconButton,
-    SeedSignerIconConstants, TopNav, TextArea, load_image)
+    SeedSignerIconConstants, TopNav, TextArea)
 from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
 from seedsigner.hardware.buttons import HardwareButtonsConstants, HardwareButtons
 from seedsigner.models.encode_qr import BaseQrEncoder
@@ -145,7 +145,17 @@ class LoadingScreenThread(BaseThread):
         from seedsigner.gui.renderer import Renderer
         renderer: Renderer = Renderer.get_instance()
 
-        center_image = load_image("btc_logo_60x60.png")
+        center_image = Image.new("RGB", (60, 60), GUIConstants.BACKGROUND_COLOR)
+        center_icon = Icon(
+            canvas=center_image,
+            image_draw=ImageDraw.Draw(center_image),
+            icon_name=SeedSignerIconConstants.BITCOIN_ALT,
+            icon_color=GUIConstants.PRIMARY_COLOR,
+            icon_size=60,
+        )
+        center_icon.screen_x = (center_image.width - center_icon.width) // 2
+        center_icon.screen_y = (center_image.height - center_icon.height) // 2
+        center_icon.render()
         orbit_gap = 2*GUIConstants.COMPONENT_PADDING
         bounding_box = (
             int((renderer.canvas_width - center_image.width)/2 - orbit_gap),

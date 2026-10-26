@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  BITPOLITO_VERSION: "0.8.7-bitpolito.1"
+  BITPOLITO_VERSION: "0.8.7-bitpolito.2"
   BITPOLITO_APP_REPOSITORY: "https://github.com/BitPolito/seedsigner.git"
   SEEDSIGNER_OS_COMMIT: "d13859392660fe512a753bc14ecd0edc86c35510"
   DOCKER_DEFAULT_PLATFORM: "linux/amd64"

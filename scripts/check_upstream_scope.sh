@@ -80,6 +80,7 @@ while IFS= read -r path; do
         pyproject.toml|\
         scripts/build-pi0.sh|\
         scripts/build-review-sheets.py|\
+        scripts/build-brand-icons.py|\
         scripts/check_upstream_scope.sh|\
         scripts/release.env|\
         scripts/run-quality-gate.sh|\
@@ -95,6 +96,7 @@ while IFS= read -r path; do
         src/seedsigner/gui/screens/settings_screens.py|\
         src/seedsigner/gui/screens/tools_screens.py|\
         src/seedsigner/gui/toast.py|\
+        src/seedsigner/resources/fonts/seedsigner-icons.otf|\
         src/seedsigner/resources/img/bitpolito_splash.png|\
         src/seedsigner/resources/img/cow.png|\
         src/seedsigner/resources/img/partners/bitpolito_logo.png|\

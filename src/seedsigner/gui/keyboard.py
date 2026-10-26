@@ -126,7 +126,7 @@ class Keyboard:
                     font = self.keyboard.icon_key_font
                     text_height = self.keyboard.icon_key_height
 
-            outline_color = GUIConstants.ACCENT_COLOR
+            outline_color = GUIConstants.SECONDARY_COLOR
             if not self.is_active:
                 rect_color = self.keyboard.deactivated_background_color
                 font_color = GUIConstants.INACTIVE_COLOR
@@ -137,14 +137,15 @@ class Keyboard:
                     outline_color = self.keyboard.highlight_color
             elif self.is_selected:
                 rect_color = self.keyboard.highlight_color  # Render solid background with the UI's hero color
-                font_color = GUIConstants.TEXT_ON_PRIMARY_COLOR
+                outline_color = self.keyboard.highlight_color
+                font_color = GUIConstants.BUTTON_SELECTED_FONT_COLOR
             else:
                 if self.is_additional_key:
-                    rect_color = GUIConstants.BACKGROUND_COLOR
-                    font_color = GUIConstants.PRIMARY_COLOR
+                    rect_color = self.keyboard.background_color
+                    font_color = GUIConstants.BUTTON_FONT_COLOR
                 else:
                     rect_color = self.keyboard.background_color
-                    font_color = GUIConstants.PRIMARY_COLOR
+                    font_color = GUIConstants.BUTTON_FONT_COLOR
 
             self.keyboard.draw.rounded_rectangle(
                 (
@@ -526,7 +527,7 @@ class TextEntryDisplay(TextEntryDisplayConstants):
     font_name: str = GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME
     font_size: int = 24
     accent_color: str = GUIConstants.PRIMARY_COLOR
-    background_color: str = GUIConstants.BUTTON_BACKGROUND_COLOR
+    background_color: str = GUIConstants.BACKGROUND_COLOR
     cursor_mode: str = TextEntryDisplayConstants.CURSOR_MODE__BLOCK
     is_centered: bool = True
     cur_text: str = " "
@@ -588,9 +589,9 @@ class TextEntryDisplay(TextEntryDisplayConstants):
             draw.text((self.text_offset, self.height - int(text_height/2)), self.cur_text[:-1], fill=self.accent_color, font=self.font, anchor="ls")
 
             # Draw the highlighted cursor block
-            cursor_color = GUIConstants.ACCENT_COLOR
+            cursor_color = GUIConstants.BUTTON_SELECTED_COLOR
             draw.rectangle((cursor_block_offset, 1, cursor_block_offset + cursor_block_width, self.height - 1), fill=cursor_color)
-            draw.text((cursor_block_offset + 1, self.height - int(text_height/2)), self.cur_text[-1], fill=GUIConstants.TEXT_ON_PRIMARY_COLOR, font=self.font, anchor="ls")
+            draw.text((cursor_block_offset + 1, self.height - int(text_height/2)), self.cur_text[-1], fill=GUIConstants.BUTTON_SELECTED_FONT_COLOR, font=self.font, anchor="ls")
 
         else:
             cursor_bar_serif_half_width = 4

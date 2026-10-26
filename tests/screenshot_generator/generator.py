@@ -149,6 +149,16 @@ class ScreensaverDeterministicView(View):
         )
 
 
+class LoadingDeterministicView(View):
+    def run(self):
+        from seedsigner.gui.screens.screen import LoadingScreenThread
+
+        # ScreenshotRenderer exits after the first frame; no real thread starts.
+        loading = LoadingScreenThread()
+        loading.keep_running = True
+        loading.run()
+
+
 def generate_screenshots(locale, screenshot_root=None):
     """
         The `Renderer` class is mocked so that calls in the normal code are ignored
@@ -339,6 +349,7 @@ def generate_screenshots(locale, screenshot_root=None):
                 ScreenshotConfig(OpeningSplashView, dict(force_partner_logos=True)),
                 ScreenshotConfig(OpeningSplashView, dict(force_partner_logos=False), screenshot_name="OpeningSplashView_no_partner_logos"),
                 ScreenshotConfig(ScreensaverDeterministicView, screenshot_name="ScreensaverScreen_cow_deterministic"),
+                ScreenshotConfig(LoadingDeterministicView, screenshot_name="LoadingScreen_bitsymbol"),
                 ScreenshotConfig(MainMenuView),
                 ScreenshotConfig(MainMenuView, screenshot_name='MainMenuView_SDCardStateChangeToast_removed',  toast_thread=SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__REMOVED, activation_delay=0, duration=0)),
                 ScreenshotConfig(MainMenuView, screenshot_name='MainMenuView_SDCardStateChangeToast_inserted', toast_thread=SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__INSERTED, activation_delay=0, duration=0)),
