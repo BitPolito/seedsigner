@@ -85,11 +85,11 @@ It runs the full release gate first, checks out the pinned SeedSigner OS under
 official GitHub repository.
 
 Successful output is placed under
-`artifacts/release/0.8.7-bitpolito.1/`:
+`artifacts/release/0.8.7-bitpolito.2/`:
 
-- `seedsigner_os.0.8.7-bitpolito.1.pi0.img`;
-- `seedsigner_os.0.8.7-bitpolito.1.pi0.manifest.txt`;
-- `seedsigner_os.0.8.7-bitpolito.1.pi0.sha256`.
+- `seedsigner_os.0.8.7-bitpolito.2.pi0.img`;
+- `seedsigner_os.0.8.7-bitpolito.2.pi0.manifest.txt`;
+- `seedsigner_os.0.8.7-bitpolito.2.pi0.sha256`.
 
 Existing release artefacts are never overwritten.
 
@@ -99,8 +99,8 @@ Verify the image against the BitPolito manifest:
 
 ```bash
 ./scripts/verify-image.sh \
-  artifacts/release/0.8.7-bitpolito.1/seedsigner_os.0.8.7-bitpolito.1.pi0.img \
-  artifacts/release/0.8.7-bitpolito.1/seedsigner_os.0.8.7-bitpolito.1.pi0.manifest.txt
+  artifacts/release/0.8.7-bitpolito.2/seedsigner_os.0.8.7-bitpolito.2.pi0.img \
+  artifacts/release/0.8.7-bitpolito.2/seedsigner_os.0.8.7-bitpolito.2.pi0.manifest.txt
 ```
 
 The verifier checks the image filename, pinned OS commit, commit-id formats, and
@@ -108,8 +108,12 @@ SHA-256. The manifest also records the exact application and Buildroot commits.
 
 ## Hardware acceptance and publication
 
-Flash the candidate bytes to the Pi Zero and complete the checklist in
-the hardware acceptance checklist below. Use test funds only. If the
+Flash the candidate bytes to the Pi Zero. Use test funds only. Check boot and
+branding, button navigation, all display configurations used on the device,
+color inversion, camera rotations, QR and SeedQR scanning, PSBT signing and
+output QR, critical warnings, the 30-second screensaver and wake-up, microSD
+removal/reinsertion, restart and shutdown. Confirm production has no enabled
+network or SSH access. If the
 hardware test passes, publish the same image bytes and SHA-256 without rebuilding
 them. Any source change requires a new revision, build, hash, and hardware test.
 

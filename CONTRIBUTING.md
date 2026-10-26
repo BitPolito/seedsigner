@@ -5,11 +5,16 @@ All development and pull requests belong to
 [BitPolito/seedsigner](https://github.com/BitPolito/seedsigner). Do not modify
 the official SeedSigner repositories.
 
+Write documentation, code comments, developer-facing messages, commit messages
+and pull requests in English. Preserve upstream application translations and
+localized test fixtures; English is the repository's working language, not a
+restriction on supported application languages.
+
 ## Workflow
 
 - Create or update work on the `dev` branch.
 - Keep `main` reserved for validated code and releases.
-- Open pull requests from `dev` (or a focused feature branch) into `dev`.
+- Open pull requests from a focused feature branch into `dev`.
 - Keep changes focused and explain the user-visible effect in the pull request.
 
 ## Local setup and tests
@@ -37,6 +42,9 @@ security code, Buildroot or SeedSigner OS.
 
 Never enter real seeds, private keys or funds in the simulator. Use deterministic
 fixtures and test data only.
+
+For repository layout and the upstream upgrade checklist, see
+[maintenance](docs/bitpolito-maintenance.md).
 
 ## Pull requests
 

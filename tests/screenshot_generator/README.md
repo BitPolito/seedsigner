@@ -1,27 +1,26 @@
 # Screenshot Generator
 
-From the project root, run:
-```bash
-# Generate screenshots for a specific locale
-pytest tests/screenshot_generator/generator.py --locale es --screenshot-output artifacts/screenshots/es
-
-# Generate screenshots for all supported locales
-pytest tests/screenshot_generator/generator.py --screenshot-output artifacts/screenshots/all
-```
-
-You can also run a `coverage` report to see exactly what the screenshots are and are not hitting:
-```bash
-coverage erase
-coverage run -m pytest tests/screenshot_generator/generator.py --locale es --screenshot-output artifacts/screenshots/es && coverage combine && coverage report
-
-# Generate the interactive html report
-coverage html
-```
-
-Always select an ignored output directory when generating screenshots locally;
-never write generated files into the tracked screenshot submodule:
+After `scripts/setup-dev.sh`, run from the project root:
 
 ```bash
-pytest tests/screenshot_generator/generator.py \
-  --screenshot-output artifacts/screenshots
+# Generate the English review input
+.venv-simulator/bin/python -m pytest tests/screenshot_generator/generator.py \
+  --locale en --screenshot-output artifacts/screenshots/en
+
+# Rebuild the checked-in sheets for the current theme revision
+.venv-simulator/bin/python scripts/build-review-sheets.py \
+  --input artifacts/screenshots/en
 ```
+
+Use the release gate to generate all locales, or run the generator without
+`--locale` into a fresh ignored directory:
+
+```bash
+.venv-simulator/bin/python -m pytest tests/screenshot_generator/generator.py \
+  --screenshot-output artifacts/screenshots/all
+```
+
+Never write generated files into the official screenshot submodule. Raw PNGs
+remain local or CI artifacts; only the current compact English sheets and
+manifest belong in `design/review/`. For coverage use
+`./tests/run_full_coverage.sh`; see [the test guide](../README.md).
