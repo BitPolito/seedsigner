@@ -140,11 +140,11 @@ class SimulatorWindow:
         except Empty:
             error = None
         if error:
-            self.status.configure(text="Application error — see terminal", fg="#B42318")
+            self.status.configure(text="Application error — see terminal", fg="#A95360")
             print(error)
 
         if not self.app_process.is_alive() and not error:
-            self.status.configure(text="Application stopped", fg="#B42318")
+            self.status.configure(text="Application stopped", fg="#A95360")
 
         self.root.after(15, self._poll)
 

@@ -201,6 +201,8 @@ def run_headless_smoke(
     flow_frame_count = 0
     last_frame_at = None
     action_sent = flow == "startup"
+    pending_pins = []
+    next_input_at = started_at
     required_flow_frames = 1 if flow == "screensaver" else 3
 
     while time.monotonic() < deadline:
@@ -215,13 +217,18 @@ def run_headless_smoke(
                 if flow == "settings"
                 else (SimulatorButtonPins.KEY_PRESS,)
             )
-            for pin in pins:
-                # Deliberately enqueue an immediate LOW/HIGH pair. This verifies
-                # the desktop GPIO latch, not a forgiving artificial key hold.
-                input_queue.put((pin, 0))
-                input_queue.put((pin, 1))
+            pending_pins = list(pins)
             action_sent = True
             last_frame_at = now
+
+        if pending_pins and now >= next_input_at:
+            # Keep each LOW/HIGH pair immediate to exercise the GPIO latch, but
+            # let the application process each navigation key before the next.
+            # Enqueuing all three keys together can race the initial menu render.
+            pin = pending_pins.pop(0)
+            input_queue.put((pin, 0))
+            input_queue.put((pin, 1))
+            next_input_at = now + 0.25
 
         try:
             error = error_queue.get_nowait()

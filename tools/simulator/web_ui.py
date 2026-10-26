@@ -22,16 +22,16 @@ main { padding: 20px; text-align: center; }
 #screen { display: block; margin: auto; width: min(72vw, 480px); height: auto;
           image-rendering: pixelated; background: #000; border: 4px solid #001ce0;
           border-radius: 8px; box-shadow: 0 12px 32px #001ce033; }
-#status { min-height: 1.5em; margin: 12px 0; color: #005fcc; }
+#status { min-height: 1.5em; margin: 12px 0; color: #001ce0; }
 .controls { display: flex; justify-content: center; align-items: center; gap: 28px; }
 .dpad { display: grid; grid-template-columns: repeat(3, 58px); gap: 5px; }
 .side { display: grid; gap: 8px; }
 button { min-width: 58px; min-height: 48px; border: 2px solid #6666ff;
-         border-radius: 8px; background: #fff; color: #001ce0;
+         border-radius: 8px; background: #f9f9f9; color: #001ce0;
          font-size: 20px; font-weight: 700; cursor: pointer; touch-action: none; }
-button:active, button.active { background: #001ce0; color: #fff; }
+button:active, button.active { background: #001ce0; color: #f9f9f9; }
 .empty { visibility: hidden; }
-.hint { margin-top: 14px; color: #667085; font-size: 14px; }
+.hint { margin-top: 14px; color: #001ce0; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -85,7 +85,7 @@ setInterval(async () => {
   try {
     const state = await (await fetch('/status')).json();
     statusBox.textContent = state.error || (state.alive ? `Live · ${state.frames} frames` : 'Application stopped');
-    statusBox.style.color = state.error || !state.alive ? '#b42318' : '#005fcc';
+    statusBox.style.color = state.error || !state.alive ? '#a95360' : '#001ce0';
   } catch (_) { statusBox.textContent = 'Simulator server unavailable'; }
 }, 500);
 </script>
